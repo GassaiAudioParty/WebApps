@@ -125,11 +125,7 @@ input, textarea{ -webkit-user-select:text; user-select:text; -webkit-touch-callo
 .tb-btn:disabled{opacity:.35;cursor:default;pointer-events:none}
 
 /* ── Toolbar wheel groups ────────────────────────────── */
-/* Compact variant of the Inspector's slot-machine wheel (buildWheel),
-   sized to fit inside the top toolbar. Used for BPM / Time Signature /
-   Key / Loop Length — all four are now driven by the same reusable
-   wheel component instead of bespoke +/- buttons, a <select>, and a
-   text <input> respectively. */
+/* the same wheel as region 3 (buildWheel), smaller: Time / BPM / Loop / Key / Grid */
 .tb-wheel-group{display:flex;flex-direction:column;align-items:center;gap:2px}
 /* the wheel's highlighted row is the band's vertical reference: every group
    reserves the same height above (label) and below (sub-label, empty if none),
@@ -169,7 +165,6 @@ input, textarea{ -webkit-user-select:text; user-select:text; -webkit-touch-callo
 .tb-icon-btn-glyph{font-size:14px;line-height:1}
 .tb-icon-btn-label{font-size:9px;line-height:1;letter-spacing:.02em}
 
-.ml-auto{margin-left:auto}
 
 /* ── EDITOR AREA ─────────────────────────────────────── */
 #editor{flex-shrink:0;display:flex;flex-direction:column;overflow:hidden}
@@ -186,9 +181,10 @@ html{touch-action:pan-x pan-y}   /* no pinch-zoom anywhere (iOS also gets gestur
 .timeline-outer::-webkit-scrollbar-thumb{background:#444;border-radius:4px}
 .timeline-inner{display:flex;flex-direction:column;min-width:100%}
 
-.ruler{height:var(--ruler-h);background:var(--toolbar);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:20;display:flex;align-items:stretch;flex-shrink:0}
-.ruler-tick{border-right:1px solid var(--border);display:flex;align-items:center;padding-left:5px;font-size:10px;color:var(--text-dim);flex-shrink:0}
-.ruler-tick.bar1{border-right-color:#555}
+.ruler{height:var(--ruler-h);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:20;flex-shrink:0;
+  background:repeating-linear-gradient(90deg,var(--border) 0 1px,transparent 1px var(--bar-w,112px)),
+             repeating-linear-gradient(90deg,rgba(255,255,255,.1) 0 1px,transparent 1px var(--beat-w,28px)),var(--toolbar)}
+.ruler-bar{position:absolute;top:0;bottom:0;display:flex;align-items:center;padding-left:5px;font-size:10px;color:var(--text-dim)}
 
 .lane{height:var(--lane-h);background:var(--lane);border-bottom:1px solid var(--lane-border);position:relative;overflow:hidden;flex-shrink:0}
 .lane::before{content:'';position:absolute;inset:0;pointer-events:none;
@@ -256,18 +252,11 @@ html{touch-action:pan-x pan-y}   /* no pinch-zoom anywhere (iOS also gets gestur
   pointer-events:none;
 }
 
-/* ── BOTTOM PANEL ────────────────────────────────────── */
-/* Fixed-height area: always occupies the same space regardless of what
-   it's showing (chord Inspector, step sequencer, or empty state) — no
-   tabs, content auto-switches based on what's selected. */
-/* ── REGION 3+4 SHARED ROW ─────────────────────────────
-   #bottom fills all the height left between the timeline (region 2) and
-   the bottom band (region 4), so the top band (region 1) and the bottom
-   band always sit flush against the screen edges. Inside it: the block
-   editor (region 3, left, scrolls on its own when short) and the track
-   side panel (#trackSide, right) — part of region 4, drawn in the bottom
-   band's color with no border between them, so it reads as the bottom
-   band "growing" upward. */
+/* ── REGIONS 3+4 ─────────────────────────────────────────
+   #bottom takes all the height between the timeline (2) and the bottom band
+   (4), so bands 1 and 4 sit flush against the screen edges. Inside: the block
+   editor (3, scrolls on its own) and region 4's side panel (#trackSide) in the
+   band's colour, as if the band grew upward. */
 #bottom{
   flex:1; min-height:0; position:relative;   /* the palette overlays it (#trackSide.overlay) */
   display:flex; align-items:stretch;
@@ -327,8 +316,6 @@ html{touch-action:pan-x pan-y}   /* no pinch-zoom anywhere (iOS also gets gestur
 .band-l{display:flex;align-items:center;gap:6px}
 .band-r{display:flex;align-items:center;gap:8px}
 .band-l .band-track{margin:0 2px 0 4px}
-/* track-specific buttons keep their slot when not shown, so nothing else moves */
-.slot-off{visibility:hidden;pointer-events:none}
 .band-label{font-size:10px;color:var(--text-mid);letter-spacing:.06em;margin-right:2px}
 .tog-btn{width:34px;height:34px;border-radius:var(--r);border:1px solid var(--border);background:var(--bg);color:var(--text-mid);
   font:inherit;font-size:13px;font-weight:700;cursor:pointer}
@@ -358,7 +345,6 @@ html{touch-action:pan-x pan-y}   /* no pinch-zoom anywhere (iOS also gets gestur
 .blk-title{font-size:11px;color:var(--text-mid);letter-spacing:.04em;display:flex;align-items:baseline;gap:8px}
 .blk-title .hint{font-size:10px;color:var(--text-dim)}
 .blk-text{font-size:12px;color:var(--text-mid);line-height:1.6}
-.len-ctl{display:flex;align-items:center;gap:6px}
 
 .ins-name{font-size:30px;font-weight:700;color:var(--text);line-height:1;font-variant-numeric:tabular-nums}
 .ins-type{font-size:12px;color:var(--text-mid);margin-top:4px;line-height:16px}
@@ -376,7 +362,6 @@ html{touch-action:pan-x pan-y}   /* no pinch-zoom anywhere (iOS also gets gestur
 
 .ins-label{font-size:11px;color:var(--text-mid);letter-spacing:.04em}
 
-.pill-row{display:flex;gap:5px;flex-wrap:wrap}
 
 /* ── Reel picker (horizontal scroll-snap selector) ──────
    Used for Root / Triad / Tension groups / On-chord bass — designed to
@@ -467,6 +452,7 @@ html{touch-action:pan-x pan-y}   /* no pinch-zoom anywhere (iOS also gets gestur
 .spill.none-opt{color:var(--text-dim);font-style:italic}
 
 .sug-sec{display:flex;flex-direction:column;gap:8px}
+.sug-row+.sug-title{margin-top:6px}
 .sug-title{font-size:10px;color:var(--text-dim);letter-spacing:.08em} /* no uppercase: titles contain chord names (Am ≠ AM) */
 .sug-row{display:flex;gap:6px;flex-wrap:wrap}
 .sug-chip{height:34px;padding:0 12px;border-radius:var(--r);border:1px solid var(--border);background:var(--bg);color:var(--text-mid);font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;transition:all .1s}
@@ -478,7 +464,6 @@ html{touch-action:pan-x pan-y}   /* no pinch-zoom anywhere (iOS also gets gestur
 .dlg-ov.open{display:flex}
 .dlg{background:#2A2B2E;border:1px solid #444;border-radius:6px;padding:24px;max-width:320px;width:100%;display:flex;flex-direction:column;gap:16px}
 .dlg-title{font-size:16px;font-weight:700;color:var(--text)}
-.dlg-msg{font-size:12px;color:var(--text-mid);line-height:1.5}
 .set-group{display:flex;flex-direction:column;gap:8px}
 .set-title{font-size:12px;color:var(--text);font-weight:600}
 .set-opt{display:flex;align-items:flex-start;gap:8px;font-size:13px;color:var(--text);cursor:pointer;line-height:1.4}
@@ -498,10 +483,7 @@ html{touch-action:pan-x pan-y}   /* no pinch-zoom anywhere (iOS also gets gestur
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(20px);background:#333;border:1px solid #555;border-radius:6px;padding:8px 18px;font-size:13px;color:var(--text);opacity:0;transition:opacity .2s,transform .2s;pointer-events:none;z-index:999;white-space:nowrap}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
-.no-sel{color:var(--text-dim);font-size:12px;display:flex;align-items:center;padding:4px 0;gap:6px}
 
-.legend{display:flex;gap:14px;font-size:10px;color:var(--text-dim);align-items:center;flex-wrap:wrap}
-.legend-dot{width:8px;height:8px;border-radius:2px;display:inline-block;margin-right:4px}
 
 /* ── RHYTHM TRACK (lane only — always visible, no collapse) ────── */
 /* Sits flush against the chord track above it — thin shared border
@@ -531,11 +513,6 @@ html{touch-action:pan-x pan-y}   /* no pinch-zoom anywhere (iOS also gets gestur
    block is selected) ──────────────────────────────────────────── */
 .steps-panel{display:flex;flex-direction:column}
 
-.dstep-btn{
-  height:22px;padding:0 8px;border-radius:3px;border:1px solid var(--border);
-  background:var(--bg);color:var(--text-dim);font-size:10px;font-family:inherit;cursor:pointer;
-}
-.dstep-btn.on{border-color:var(--accent);color:var(--accent);background:var(--accent-d)}
 .drum-steps-empty{padding:16px;color:var(--text-dim);font-size:12px;text-align:center;width:100%}
 
 .drum-grid-row{display:flex;flex:1;overflow:hidden}
@@ -574,7 +551,6 @@ html{touch-action:pan-x pan-y}   /* no pinch-zoom anywhere (iOS also gets gestur
   background:#30333B;box-shadow:inset 0 0 0 1px #3E414A;transition:background .05s;
 }
 .dstep.bar-start{margin-left:6px}
-.dstep.beat-line{border-left:1px solid rgba(255,255,255,.12)}
 .dstep.cur{box-shadow:inset 0 0 0 1px #666}
 .dstep .vel-mark{font-size:7px;font-weight:900;pointer-events:none}
 </style>
@@ -690,10 +666,7 @@ html{touch-action:pan-x pan-y}   /* no pinch-zoom anywhere (iOS also gets gestur
   </div>
 </div>
 
-<!-- BOTTOM PANEL — single fixed-height area. Auto-switches its content
-     based on what's currently selected: chord Inspector (Suggestions
-     integrated within it), the step sequencer for a selected rhythm
-     block, or an empty-state message when nothing is selected. -->
+<!-- regions 3 (block editor) and 4's side panel (mixer / palette) -->
 <div id="bottom">
   <div class="bottom-content" id="bottomContent"></div>
   <div id="trackSide" hidden></div>
@@ -905,23 +878,11 @@ function chordIntervals(chord){
 }
 
 // ═══════════════════════════════════════════════════════
-//  M2: Automatic 4-voice chord voicing (smooth voice leading)
-//  ────────────────────────────────────────────────────────
-//  Instead of always stacking the chord tones in root position, we keep
-//  one persistent voicing state (the actual MIDI-ish semitone value of
-//  each of the 4 voices) and, each time a new chord plays, move every
-//  voice to the nearest available chord tone rather than resetting to
-//  a fixed shape. This gives natural, minimal-movement voice leading —
-//  the same principle a keyboard player uses when comping through a
-//  progression instead of replaying identical block chords.
-//
-//  Voice roles:
-//   - Bass:  always the on-chord bass note if set, else the root.
-//            Fixed to a low register (around C2–C3).
-//   - Upper voices (3 to 5, one per chord tone — see upperClasses): choose ANY
-//     available chord tone (root, 3rd/5th-equivalent from the active
-//     triad, plus any active tensions), in whichever octave keeps that
-//     voice's movement from its previous pitch as small as possible.
+//  M2: Voice leading — a bass plus 3 to 5 upper voices (one per chord tone,
+//  see upperClasses). One voicing state persists between chords and every
+//  voice moves to the nearest chord tone inside its fixed range (BASS_RANGE /
+//  UPPER_RANGE), the way a keyboard player comps instead of replaying block
+//  chords. The bass plays the on-chord bass (= the root when there is none).
 // ═══════════════════════════════════════════════════════
 let voicingState = null; // {bass:number, upper:[n1,n2,n3]} in semitones from C0, or null before first chord
 
@@ -1051,10 +1012,6 @@ function chordSymbol(chord, rootLabel, keyIdx = -1){
   if(parens.length) sym += '(' + parens.join(',') + ')';
   if(chord.bass!==chord.root) sym += '/' + noteName(chord.bass, keyIdx);
   return sym;
-}
-
-function chordTypeName(chord){
-  return TRIADS[chord.triad]?.name ?? '';
 }
 
 // ── Chord text parser ──────────────────────────────────────────────────
@@ -1189,7 +1146,6 @@ function degreeLabel(root, keyIdx){
 // ═══════════════════════════════════════════════════════
 //  M3: Drum tracks (integrated step sequencer) — kit definitions
 // ═══════════════════════════════════════════════════════
-const MAX_STEPS = 32;
 const DRUM_TRACKS = [
   { name:'KICK',    color:'#FF5566', freq:45,  type:'kick'    },
   { name:'SNARE',   color:'#FFA030', freq:200, type:'snare'   },
@@ -1214,7 +1170,7 @@ function kitRows(rows, names, fill){
   return DRUM_TRACKS.map(t => byName[t.name] !== undefined ? byName[t.name] : fill());
 }
 // mkDrumPattern now takes the block's own nSteps (each RhythmBlock has
-// its own step resolution — no longer a single global MAX_STEPS array).
+// its own step resolution).
 function mkDrumPattern(nSteps){ return DRUM_TRACKS.map(()=>Array(nSteps).fill(0)); }
 function mkDrumParams(){ return DRUM_TRACKS.map(()=>({vol:80,mute:false,solo:false})); }
 // Chord track mixer channels (2026-11-22). CHORD = the triad and its 6th/7th,
@@ -1255,7 +1211,6 @@ function mkUnsetChord(startBeat, beats){ return mkChord({ root:null }, startBeat
 function mkRhythmBlock(startBeat, beats, nSteps){
   return { id:newId(), startBeat, beats, nSteps, pattern: mkDrumPattern(nSteps), muted: DRUM_TRACKS.map(()=>false) };
 }
-function rhythmBlockBeats(block){ return block.beats; }
 
 // ═══════════════════════════════════════════════════════
 //  Active node tracking — lets us hard-stop everything that's
@@ -1263,64 +1218,62 @@ function rhythmBlockBeats(block){ return block.beats; }
 //  Without this, stop only cancels *future* scheduling; audio
 //  already handed to Web Audio keeps playing/ringing out.
 // ═══════════════════════════════════════════════════════
-let activeNodes = []; // [{osc, gain, stopAt}]
+const activeNodes = new Set(); // {osc, gain, stopAt} of everything sounding or scheduled
 
 let trackSink = null;   // while set, the nodes being created are also collected here (see playPreviewNow)
 function trackNode(osc, gain, stopAt){
-  activeNodes.push({osc, gain, stopAt});
-  if(trackSink) trackSink.push({osc, gain, stopAt});
-  // Self-clean once naturally finished, so the list doesn't grow forever
-  osc.addEventListener && osc.addEventListener('ended', ()=>{
-    activeNodes = activeNodes.filter(n=>n.osc!==osc);
-  });
+  const entry = { osc, gain, stopAt };
+  activeNodes.add(entry);
+  if(trackSink) trackSink.push(entry);
+  if(osc.addEventListener) osc.addEventListener('ended', ()=>activeNodes.delete(entry), { once:true });
 }
 
 function killAllActiveNodes(ctx){
   fadeOutNodes(ctx, activeNodes);
-  activeNodes = [];
+  activeNodes.clear();
 }
-// Fades the given {osc, gain} entries out over `fade` seconds (no click) and stops them.
+// Fades the given {osc, gain} entries out over `fade` seconds (no click) and
+// stops them. The fade starts from the gain's last set value, re-set at `now`:
+// right after cancelScheduledValues() some browsers report the last explicit
+// value rather than the interpolated one.
 function fadeOutNodes(ctx, list, fade = 0.025){
   const now = ctx.currentTime;
-  const FADE = fade;
-  list.forEach(({osc,gain})=>{
+  for(const { osc, gain } of list){
     try{
-      // cancelScheduledValues() stops any in-flight setValueCurveAtTime /
-      // ramp, but gain.gain.value immediately after cancel is not reliably
-      // "the value at this instant" in every browser (it can jump back to
-      // the last explicitly-set value instead of the interpolated one).
-      // To sidestep that, we explicitly re-set the value at `now` using
-      // setValueAtTime with the value we *know* is safe (whatever it last
-      // was set to), then ramp that known value down. This guarantees a
-      // clean, click-free, fully-audible-then-silent fade regardless of
-      // browser-specific interpolation quirks.
-      const knownVal = gain.gain.value; // best-effort snapshot
+      const v = Math.max(gain.gain.value, 0.0001);
       gain.gain.cancelScheduledValues(now);
-      gain.gain.setValueAtTime(Math.max(knownVal, 0.0001), now);
-      gain.gain.linearRampToValueAtTime(0.0001, now + FADE);
-      osc.stop(now + FADE + 0.005);
-    }catch(e){ /* already stopped or invalid state - ignore */ }
-  });
+      gain.gain.setValueAtTime(v, now);
+      gain.gain.linearRampToValueAtTime(0.0001, now + fade);
+      osc.stop(now + fade + 0.005);
+    }catch(e){ /* already stopped */ }
+  }
 }
 
+// ── 3. noise for the drums: a few 2-second buffers made once per context and
+// picked at random per hit (making a fresh random buffer on every hit cost up to
+// ~70,000 random numbers per crash).
+const NOISE_SEC = 2, NOISE_VARIANTS = 4;
+const _noise = new WeakMap();
+function noiseBuffers(ctx){
+  let list = _noise.get(ctx);
+  if(!list){
+    list = Array.from({ length: NOISE_VARIANTS }, () => {
+      const buf = ctx.createBuffer(1, ctx.sampleRate * NOISE_SEC, ctx.sampleRate), d = buf.getChannelData(0);
+      for(let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+      return buf;
+    });
+    _noise.set(ctx, list);
+  }
+  return list;
+}
+
+// One drum hit. Every time is relative to `when` (the scheduled future time) —
+// never ctx.currentTime, or the hit fires up to SCHED_AHEAD early (DESIGN.md M4).
 function synthDrum(ctx, type, freq, vol, dest, when){
-  // CRITICAL FIX: `when` must be used as the actual scheduled start time.
-  // This function previously used ctx.currentTime internally for every
-  // start()/stop()/automation call, ignoring the caller's intended
-  // schedule time entirely. Since the scheduler look-ahead runs up to
-  // SCHED_AHEAD (150ms) into the future, every drum hit was actually
-  // firing immediately at the moment schedule() happened to run, not at
-  // its correct future tick time — i.e. drums were consistently playing
-  // ~150ms EARLY relative to the chord track (which correctly used its
-  // `when` time throughout). This matches the reported ~1 sixteenth-note
-  // (BPM100) / ~1 eighth-note (BPM200) fixed-time gap exactly, since
-  // SCHED_AHEAD is a fixed 150ms regardless of tempo.
   if(vol<=0) return;
-  function mkNoise(d){
-    const buf=ctx.createBuffer(1,ctx.sampleRate*d,ctx.sampleRate);
-    const data=buf.getChannelData(0);
-    for(let i=0;i<data.length;i++) data[i]=Math.random()*2-1;
-    const src=ctx.createBufferSource(); src.buffer=buf; return src;
+  function mkNoise(){   // hits are at most 1.6 s long, the buffers NOISE_SEC
+    const src=ctx.createBufferSource(), list=noiseBuffers(ctx);
+    src.buffer=list[Math.floor(Math.random()*list.length)]; return src;
   }
   function env(g,v,d){ g.gain.setValueAtTime(v,when); g.gain.exponentialRampToValueAtTime(0.001,when+d); }
 
@@ -1487,7 +1440,6 @@ let BEAT_W = BASE_BEAT_W;
 const PAD_RIGHT = 120;
 
 // M8/M11/M15: position/length helpers
-function chordStartBeat(idx){ return S.chords[idx].startBeat; }
 
 // Timeline length is an independent container (bars × beats/bar), not
 // derived from block lengths. Blocks may leave gaps (silence).
@@ -1535,7 +1487,6 @@ function maxExtendable(track, idx){
   const items = trackItems(track), it = items[idx], next = items[idx+1];
   return (next ? next.startBeat : totalBeats()) - it.startBeat;
 }
-function maxExtendableBeats(idx){ return Math.max(1, maxExtendable('chord', idx)); }
 
 // Grow the timeline so every item fits (never shrinks it).
 function fitTimeline(){
@@ -1575,14 +1526,19 @@ function insertItems(track, newItems, at){
 // Move the items `ids` by `delta` beats. If the drop point lands inside
 // another block, it snaps to that block's nearer edge; blocks after the
 // moved group are pushed later only as far as needed to avoid overlap.
+// Where something dropped at `start` lands among `others`: inside a block → that
+// block's nearer edge (ties go to its start), otherwise `start` itself.
+function landingStart(others, start){
+  const host = others.find(r => r.startBeat < start - EPS && itemEnd(r) > start + EPS);
+  if(!host) return start;
+  return (start - host.startBeat <= itemEnd(host) - start) ? host.startBeat : itemEnd(host);
+}
 function moveItems(track, ids, delta){
   const items = trackItems(track), set = new Set(ids);
   const moving = items.filter(it=>set.has(it.id)), rest = items.filter(it=>!set.has(it.id));
   if(!moving.length) return;
   const g0 = Math.min(...moving.map(m=>m.startBeat));
-  let start = Math.max(0, snapTick(g0 + delta));
-  const host = rest.find(r => r.startBeat < start - EPS && itemEnd(r) > start + EPS);
-  if(host) start = (start - host.startBeat <= itemEnd(host) - start) ? host.startBeat : itemEnd(host);
+  const start = landingStart(rest, Math.max(0, snapTick(g0 + delta)));
   const shift = start - g0;
   moving.forEach(m=>{ m.startBeat = snapTick(m.startBeat + shift); });
   const gEnd = Math.max(...moving.map(itemEnd));
@@ -1592,6 +1548,34 @@ function moveItems(track, ids, delta){
     cursor = Math.max(cursor, itemEnd(r));
   });
   sortTrack(track); fitTimeline();
+}
+
+// What the chord track starts sounding at tick `p` (0 ≤ p < total ticks), or
+// null. A chord starts where the resolved (block, repeat offset) pair changes —
+// a new block, a repeat starting over, the top of the loop — and lasts until
+// its source block ends or the repeat window closes, whichever is first.
+// Unset chords are returned too (callers skip them). Used by playback and MIDI.
+function chordOnsetAt(p){
+  const r = resolveAt(S.chords, p);
+  if(!r || !r.item) return null;
+  const q = p > 0 ? resolveAt(S.chords, p - 1) : null;
+  if(q && q.item === r.item && q.offset === r.offset) return null;
+  return { item: r.item, end: Math.min(toTick(itemEnd(r.item)) + r.offset, r.limit) };
+}
+// The rhythm track at tick `p`: the resolution (resolveAt) and every step whose
+// onset falls in [p, p+1) — steps need not sit on ticks, a block's nSteps
+// divides the block — as { s, dt } (dt = ticks after p). Repeats play their
+// source's steps, cut where the repeat window closes. Used by playback and MIDI.
+function rhythmStepsAt(p){
+  const r = resolveAt(S.rhythmBlocks, p), steps = [];
+  if(r && r.item){
+    const b = r.item, bs = toTick(b.startBeat), stepDur = toTick(b.beats) / b.nSteps, into = p - r.offset - bs;
+    for(let s = Math.ceil(into / stepDur - 1e-9); s < b.nSteps && s * stepDur < into + 1 - 1e-9; s++){
+      if(bs + s * stepDur + r.offset >= r.limit - 1e-9) break;
+      steps.push({ s, dt: s * stepDur - into });
+    }
+  }
+  return { r, steps };
 }
 
 // Resolve what sounds at tick `p` (0 ≤ p < total) on a track, following
@@ -1615,8 +1599,6 @@ function resolveAt(items, p){
   return { outerIdx, item:null, idx:-1, offset, limit };
 }
 
-function rhythmBlocksSorted(){ return [...S.rhythmBlocks].sort((a,b)=>a.startBeat-b.startBeat); }
-
 // UI-side chord name: chordSymbol spelled for the current key.
 function chordName(chord, rootLabel){ return chordSymbol(chord, rootLabel, S.keyIdx); }
 
@@ -1627,7 +1609,7 @@ function chordName(chord, rootLabel){ return chordSymbol(chord, rootLabel, S.key
 //  Layer 4 (M4) for why this constraint exists.
 // ═══════════════════════════════════════════════════════
 let actx=null;
-function getCtx(){ if(!actx) actx=new(window.AudioContext||window.webkitAudioContext)(); return actx; }
+function getCtx(){ if(!actx) actx=new AudioContext(); return actx; }
 
 // Track-wide mix (region 4's band). trackAudible decides mute/solo during
 // playback; trackGain scales the volume (previews use the volume too, but a
@@ -1811,43 +1793,19 @@ function previewChord(chord){
 }
 
 // ═══════════════════════════════════════════════════════
-//  M7: MASTER TRANSPORT CLOCK
-//  ────────────────────────────────────────────────────────
-//  Single source of truth for time. Both the chord track and the
-//  drum track subscribe to this one clock's 16th-note ticks instead
-//  of each independently computing "when is my next event" — that
-//  duplication (nextBeatT vs next16T, two separate while-loops) was
-//  the root cause of the drift between chord and drum playback.
-//
-//  Design:
-//   - The clock's unit is a single 16th note ("tick"). A quarter-note
-//     beat = 4 ticks. This is fine-grained enough for both the chord
-//     grid (which moves in whole beats) and the drum grid (16th notes).
-//   - On start, we set (baseTick=0, baseTime=now+LOOKAHEAD_BUFFER) as
-//     the clock's reference point. Every tick's absolute time is
-//     derived as baseTime + (tickIndex - baseTick) * tickDur — a
-//     RELATIVE calculation from the last reference point, not a fixed
-//     global origin. Nothing ever measures "now" to decide where the
-//     next tick goes — there is exactly one arithmetic timeline, so
-//     chord ticks and drum ticks can never disagree about when tick #N
-//     happens.
-//   - Changing S.bpm mid-playback calls rebaseTempo(), which moves the
-//     reference point forward to "right now" (in both tick and time
-//     terms) before the tempo actually changes. This means ticks at or
-//     before the rebase point keep exactly the timing they were given
-//     when they were scheduled — audio already handed to Web Audio is
-//     never retroactively reinterpreted — while only ticks AFTER the
-//     rebase point advance at the new tempo. Without this, tickTime()
-//     would recompute EVERY tick's time (including ones already in the
-//     past) using the new tempo, which was causing already-sounding
-//     chord audio to appear to cut off early relative to the (now
-//     faster-advancing) UI highlight.
-//   - A single lookahead loop (setTimeout-driven, audio-time-gated) walks
-//     this timeline forward and fires audio for both tracks at identical
-//     tick boundaries. A separate rAF loop only handles visual playhead
-//     redraw by reading back from the same arithmetic timeline.
+//  M7: Transport — the single clock both tracks are scheduled from.
+//   - Unit: one tick = 1/TPB beat (TPB = 12: 16ths and 16th triplets).
+//   - tickTime(n) = baseTime + (n - baseTick) × tickDur: one arithmetic
+//     timeline, so the chord and drum tracks can never disagree about when
+//     tick n happens (DESIGN.md Layer 6.5 原則2).
+//   - A tempo change first calls rebaseTempo(), which moves the reference to
+//     the first tick not yet scheduled: what was handed to Web Audio keeps its
+//     time, later ticks follow the new tempo.
+//   - schedule() (setTimeout) books every tick inside the lookahead window;
+//     uiTick() (rAF) only reads the audio clock back for the display.
 // ═══════════════════════════════════════════════════════
 
+const DRUM_VEL_GAIN = { 1:0.35, 2:0.75, 3:1.0 };   // step velocity → drum gain
 const LOOKAHEAD_BUFFER = 0.12;   // fixed buffer before playback actually starts (sec)
 const SCHED_AHEAD       = 0.15;  // how far ahead of "now" ticks get scheduled (sec)
 const SCHED_INTERVAL    = 25;    // how often the scheduler timer fires (ms)
@@ -1887,25 +1845,6 @@ const Transport = {
     this.baseTime = this.tickTime(this.tickCursor);   // computed with the OLD tempo
     this.baseTick = this.tickCursor;
     // tickDur() is a live getter on S.bpm, so ticks from here on follow the new tempo.
-  },
-
-  // Which chord block is under tick n (-1 = gap). For a repeat this is the
-  // repeat block itself (what the UI highlights); resolveAt gives the source.
-  chordIndexAtTick(n){
-    const r = resolveAt(S.chords, n % this.totalTicks());
-    return r ? r.outerIdx : -1;
-  },
-
-  // Rhythm track: the block under tick n and the step of its source block
-  // (step -1 when a repeat resolves to silence). null = gap.
-  rhythmBlockAtTick(n){
-    const p = n % this.totalTicks();
-    const r = resolveAt(S.rhythmBlocks, p);
-    if(!r) return null;
-    if(!r.item) return { blockIdx: r.outerIdx, step: -1 };
-    const b = r.item, stepDur = toTick(b.beats) / b.nSteps;
-    const step = Math.floor((p - r.offset - toTick(b.startBeat)) / stepDur + 1e-9);
-    return { blockIdx: r.outerIdx, step: Math.min(step, b.nSteps-1) };
   },
 
   start(){
@@ -1959,84 +1898,45 @@ const Transport = {
       const n = this.tickCursor;
       const t = this.tickTime(n);
 
-      // Loop / stop handling for the chord track (drum track always loops
-      // over its own fixed nSteps independently of chord length, exactly
-      // as before, but now anchored to the same absolute tick clock).
-      //
-      // IMPORTANT: this check must happen BEFORE the onset/audio check
-      // below, and must suppress that tick's audio entirely. Previously
-      // the onset-check and this stop-check were independent — so when
-      // n wrapped back around to beat 0 (mod totalBeats()) with looping
-      // off, the onset-check still fired chord0's audio (since beat 0
-      // legitimately has a chord starting there for the NEXT loop pass),
-      // and only afterward did this block push a stop sentinel. That
-      // extra, unwanted note is what made the actual last chord sound
-      // like it got cut short: playback stopped abruptly right after
-      // that spurious extra note started, which happens almost
-      // immediately after — giving the impression the true last chord's
-      // tail was chopped off early.
+      // Loop OFF: the wrap-around tick is checked before anything sounds there,
+      // or the next pass's first chord would sound just before the stop.
       const T = this.totalTicks();
       const p = n % T;
-      const shouldStopHere = !S.loop && n > 0 && p === 0;
-
-      if(shouldStopHere){
+      if(!S.loop && n > 0 && p === 0){
         chordEvents.push({tick:n, time:t, chordIdx:-2}); // stop sentinel
-        // Nothing past the end may be scheduled: the lookahead window would
-        // otherwise keep queueing the next pass's first notes (an audible
-        // blip right before the stop fade).
-        this.stopQueued = true;
+        this.stopQueued = true;                          // and nothing past the end is scheduled
         break;
-      } else {
-        // ── Chord track ── A chord sounds from the tick where the resolved
-        // (chord, repeat-offset) pair changes: a new block, a repeat starting
-        // over, or the loop wrapping. It's cut at its source end or at the
-        // end of the repeat window, whichever comes first.
-        const r = resolveAt(S.chords, p);
-        const key = r && r.item ? r.idx + '@' + r.offset : null;
-        const pr = p > 0 ? resolveAt(S.chords, p-1) : null;
-        const prevKey = pr && pr.item ? pr.idx + '@' + pr.offset : null;
-        if(key && key !== prevKey && trackAudible('chord')){
-          const endTick = Math.min(toTick(itemEnd(r.item)) + r.offset, r.limit);
-          playChordAudio(r.item, t, (endTick - p) * this.tickDur() * 0.95);
-        }
-        const outer = r ? r.outerIdx : -1;
-        if(outer !== this.lastChordOuter || p === 0){
-          chordEvents.push({tick:n, time:t, chordIdx:outer}); // -1 = gap
-          this.lastChordOuter = outer;
-        }
+      }
 
-        // ── Rhythm track ── steps need not sit on ticks (a block's nSteps
-        // divides the block), so every step whose onset falls in [p, p+1)
-        // is scheduled at its exact time. Repeats play their source's steps,
-        // cut at the repeat window's end.
-        const rr = resolveAt(S.rhythmBlocks, p);
-        if(rr && rr.item){
-          const block = rr.item;
-          const rhythmOn = trackAudible('rhythm'), rhythmGain = trackGain('rhythm');
-          const blockStart = toTick(block.startBeat);
-          const stepDur = toTick(block.beats) / block.nSteps;
-          const into = p - rr.offset - blockStart;
-          const first = Math.ceil(into/stepDur - 1e-9);
-          const soloActive = S.drumParams.some(prm=>prm.solo);
-          for(let s = first; s < block.nSteps && s*stepDur < into + 1 - 1e-9; s++){
-            if(blockStart + s*stepDur + rr.offset >= rr.limit - 1e-9) break;
-            const when = t + (s*stepDur - into) * this.tickDur();
-            block.pattern.forEach((track,ti)=>{
-              const vel = track[s], prm = S.drumParams[ti];
-              // track-wide mute/solo (mixer) AND this block's own per-instrument mute
-              if(vel>0 && rhythmOn && !prm.mute && !(soloActive && !prm.solo) && !block.muted?.[ti]){
-                const gainMap={1:0.35,2:0.75,3:1.0};
-                synthDrum(ctx, DRUM_TRACKS[ti].type, DRUM_TRACKS[ti].freq, gainMap[vel]*(prm.vol/100)*rhythmGain, ctx.destination, when);
-              }
-            });
-            drumEvents.push({tick:n, time:when, blockIdx:rr.outerIdx, step: rr.outerIdx===rr.idx ? s : -1});
-            this.lastDrumKey = rr.outerIdx + ':' + s;
-          }
-        } else {
-          const outerB = rr ? rr.outerIdx : -1;
-          const k = outerB + ':-1';
-          if(k !== this.lastDrumKey){ drumEvents.push({tick:n, time:t, blockIdx:outerB, step:-1}); this.lastDrumKey = k; }
+      // ── Chord track ──
+      const on = trackAudible('chord') && chordOnsetAt(p);
+      if(on) playChordAudio(on.item, t, (on.end - p) * this.tickDur() * 0.95);
+      const outer = resolveAt(S.chords, p)?.outerIdx ?? -1;
+      if(outer !== this.lastChordOuter || p === 0){
+        chordEvents.push({tick:n, time:t, chordIdx:outer}); // -1 = gap
+        this.lastChordOuter = outer;
+      }
+
+      // ── Rhythm track ── each step at its exact time; the mixer's mute/solo
+      // and the block's own per-instrument mute both silence an instrument
+      const { r: rr, steps } = rhythmStepsAt(p);
+      if(rr && rr.item){
+        const block = rr.item, rhythmOn = trackAudible('rhythm'), rhythmGain = trackGain('rhythm');
+        const soloActive = S.drumParams.some(prm=>prm.solo);
+        for(const { s, dt } of steps){
+          const when = t + dt * this.tickDur();
+          if(rhythmOn) block.pattern.forEach((row, ti)=>{
+            const vel = row[s], prm = S.drumParams[ti];
+            if(vel>0 && !prm.mute && !(soloActive && !prm.solo) && !block.muted?.[ti])
+              synthDrum(ctx, DRUM_TRACKS[ti].type, DRUM_TRACKS[ti].freq, DRUM_VEL_GAIN[vel]*(prm.vol/100)*rhythmGain, ctx.destination, when);
+          });
+          drumEvents.push({tick:n, time:when, blockIdx:rr.outerIdx, step: rr.outerIdx===rr.idx ? s : -1});
+          this.lastDrumKey = rr.outerIdx + ':' + s;
         }
+      } else {
+        const outerB = rr ? rr.outerIdx : -1;
+        const k = outerB + ':-1';
+        if(k !== this.lastDrumKey){ drumEvents.push({tick:n, time:t, blockIdx:outerB, step:-1}); this.lastDrumKey = k; }
       }
 
       this.tickCursor++;
@@ -2099,7 +1999,7 @@ function updatePlayheadEl(){
   const ph=document.getElementById('playhead'); if(!ph)return;
   if(S.playing&&S.currentBeat>=0){
     ph.classList.add('visible');
-    const x=chordStartBeat(S.currentBeat)*BEAT_W;
+    const x=S.chords[S.currentBeat].startBeat*BEAT_W;
     ph.style.left=x+'px';
     const outer=document.getElementById('timelineOuter');
     if(outer){ const cw=outer.clientWidth; if(x<outer.scrollLeft||x>outer.scrollLeft+cw-60) outer.scrollLeft=Math.max(0,x-80); }
@@ -2108,15 +2008,8 @@ function updatePlayheadEl(){
 }
 
 // ═══════════════════════════════════════════════════════
-//  M8/M13: Render — Toolbar / Timeline
-// ═══════════════════════════════════════════════════════
-// ═══════════════════════════════════════════════════════
-//  M13: Toolbar wheel option builders
-//  ────────────────────────────────────────────────────────
-//  Key's "unset" option uses the same '―' + none-opt convention as the
-//  Tension group wheels elsewhere in the app (see buildWheel usage in
-//  renderInspector), so "not set" reads identically everywhere in the
-//  UI rather than each control inventing its own placeholder text.
+//  M13: Toolbar (region 1). Key's "unset" option is '―' (none-opt), the same
+//  as the tension wheels' "none".
 // ═══════════════════════════════════════════════════════
 const TIME_SIG_OPTIONS = [2,3,4,5,6,7,8,9,12];
 const LOOP_LENGTH_MIN = 1, LOOP_LENGTH_MAX = 99;
@@ -2142,67 +2035,42 @@ function renderToolbar(){
   document.getElementById('btnDegree').disabled = (S.keyIdx<0);
   document.getElementById('btnDegree').classList.toggle('on', S.showDegree);
 
-  buildWheel(
-    document.getElementById('bpmWheel'),
-    BPM_STEPS.map(v=>({ value:v, label:String(v) })),
-    S.bpm,
-    (val)=>{
-      // Same rebase-before-change safety as the old +/- buttons (see
-      // stepBpm) — mid-playback BPM changes must freeze the current
-      // tick position using the OLD tempo before S.bpm actually changes.
-      Transport.rebaseTempo();
-      S.bpm = val;
-      renderToolbar();
-    }
-  );
-
-  buildWheel(
-    document.getElementById('timeSigWheel'),
-    TIME_SIG_OPTIONS.map(n=>({ value:n, label:n+'/4' })),
-    S.timeSig.beatsPerBar,
-    (val)=>{
-      // Preserve absolute timeline length across a time-signature
-      // change (see original initTimeSigSelect comment for rationale).
-      const prevTotalBeats = totalBeats();
-      S.timeSig.beatsPerBar = val;
-      S.timelineBars = Math.max(1, Math.ceil(prevTotalBeats / val));
-      renderTimeline(); renderToolbar(); // Loop wheel shows the recalculated bar count
-      toast(val+'/4拍子に変更しました');
-    }
-  );
-
-  buildWheel(
-    document.getElementById('keyWheel'),
-    keyWheelOptions(),
-    S.keyIdx,
-    (val)=>{
-      S.keyIdx = val;
-      if(val<0) S.showDegree = false;
-      renderTimeline(); renderBottomPanel(); renderToolbar();
-    }
-  );
-
-  buildWheel(
-    document.getElementById('gridWheel'),
-    GRID_OPTIONS.map(o=>({ value:o.key, label:o.label })),   // title shows the musical name
-    S.grid,
-    (val)=>{ S.grid = val; renderLanes(); if(document.getElementById('lenVal')) renderBottomPanel(); }
-  );
+  if(!_wheelSetters.has(document.getElementById('bpmWheel'))) buildToolbarWheels();
+  setWheelValue(document.getElementById('bpmWheel'), S.bpm);
+  setWheelValue(document.getElementById('timeSigWheel'), S.timeSig.beatsPerBar);
+  setWheelValue(document.getElementById('keyWheel'), S.keyIdx);
+  setWheelValue(document.getElementById('gridWheel'), S.grid);
+  setWheelValue(document.getElementById('loopLengthWheel'), S.timelineBars);
   updateUndoButtons();
-
-  buildWheel(
-    document.getElementById('loopLengthWheel'),
-    Array.from({length: LOOP_LENGTH_MAX-LOOP_LENGTH_MIN+1}, (_,i)=>{
-      const n = LOOP_LENGTH_MIN+i;
-      return { value:n, label:String(n) };
-    }),
-    S.timelineBars,
-    (val)=>{
-      S.timelineBars = val;
-      renderTimeline(); renderRhythmLane();
-      toast('ループ長: '+val+'小節');
-    }
-  );
+}
+// The five wheels of region 1, built once (renderToolbar only sets their values)
+function buildToolbarWheels(){
+  const el = id => document.getElementById(id);
+  buildWheel(el('bpmWheel'), BPM_STEPS.map(v=>({ value:v, label:String(v) })), S.bpm, val=>{
+    Transport.rebaseTempo();          // before S.bpm changes: ticks already scheduled keep their times (M5)
+    S.bpm = val;
+    renderToolbar();
+  });
+  buildWheel(el('timeSigWheel'), TIME_SIG_OPTIONS.map(n=>({ value:n, label:n+'/4' })), S.timeSig.beatsPerBar, val=>{
+    const prevTotalBeats = totalBeats();   // the timeline keeps its length in beats
+    S.timeSig.beatsPerBar = val;
+    S.timelineBars = Math.max(1, Math.ceil(prevTotalBeats / val));
+    renderTimeline(); renderToolbar();
+    toast(val+'/4拍子に変更しました');
+  });
+  buildWheel(el('keyWheel'), keyWheelOptions(), S.keyIdx, val=>{
+    S.keyIdx = val;
+    if(val<0) S.showDegree = false;
+    renderTimeline(); renderBottomPanel(); renderToolbar();
+  });
+  buildWheel(el('gridWheel'), GRID_OPTIONS.map(o=>({ value:o.key, label:o.label })), S.grid, val=>{
+    S.grid = val; renderLanes(); if(document.getElementById('lenVal')) renderBottomPanel();
+  });
+  buildWheel(el('loopLengthWheel'), Array.from({ length: LOOP_LENGTH_MAX-LOOP_LENGTH_MIN+1 }, (_,i)=>({ value:LOOP_LENGTH_MIN+i, label:String(LOOP_LENGTH_MIN+i) })), S.timelineBars, val=>{
+    S.timelineBars = val;
+    renderTimeline();
+    toast('ループ長: '+val+'小節');
+  });
 }
 
 function renderTimeline(){
@@ -2210,24 +2078,19 @@ function renderTimeline(){
   const tw=timelineWidth();
   inner.style.width=tw+'px';
   renderRuler(tw);
-  renderLane();
+  renderTrackLane('chord');
   // The rhythm lane shares the same width/coordinate system; re-render it so
   // its width (and scroll sync) never lags behind a timeline length change.
-  renderRhythmLane();
+  renderTrackLane('rhythm');
 }
+// The ruler: beat and bar lines are a background pattern; only the bar numbers
+// are elements (it is redrawn on every zoom frame)
 function renderRuler(tw){
-  const ruler=document.getElementById('ruler');
-  ruler.innerHTML='';
-  const beats=Math.ceil(tw/BEAT_W);
-  const bpb=S.timeSig.beatsPerBar;
-  for(let b=0;b<beats;b++){
-    const bar=Math.floor(b/bpb)+1, beat=b%bpb;
-    const tick=document.createElement('div');
-    tick.className='ruler-tick'+(beat===0?' bar1':'');
-    tick.style.width=BEAT_W+'px';
-    if(beat===0) tick.textContent=bar;
-    ruler.appendChild(tick);
-  }
+  const ruler=document.getElementById('ruler'), bpb=S.timeSig.beatsPerBar;
+  ruler.style.setProperty('--beat-w', BEAT_W+'px');
+  ruler.style.setProperty('--bar-w', (BEAT_W*bpb)+'px');
+  const bars = Math.ceil(tw / (BEAT_W*bpb));
+  ruler.innerHTML = Array.from({ length: bars }, (_, b) => `<span class="ruler-bar" style="left:${b*bpb*BEAT_W}px">${b+1}</span>`).join('');
 }
 // ═══════════════════════════════════════════════════════
 //  M8/M11/M15: Lanes — both tracks are drawn and operated the same way.
@@ -2239,9 +2102,34 @@ function renderRuler(tw){
 // ═══════════════════════════════════════════════════════
 const LONG_PRESS_MS = 450, DRAG_SLOP = 6;
 
+// Follows one pointer gesture on the document until it ends, then removes its
+// listeners (they live on the document so a re-render mid-gesture can't cut it).
+//   move(ev)  every pointermove        end(ev)  pointerup
+//   options:  cancel  — a separate handler for pointercancel (default: end)
+//             passive — false lets move() call preventDefault (stops scrolling)
+// Returns stop(), which ends the tracking early without calling end/cancel.
+function trackPointer(move, end, { cancel = end, passive = true } = {}){
+  const up = ev => { stop(); end(ev); }, cn = ev => { stop(); cancel(ev); };
+  const stop = () => {
+    document.removeEventListener('pointermove', move);
+    document.removeEventListener('pointerup', up);
+    document.removeEventListener('pointercancel', cn);
+  };
+  document.addEventListener('pointermove', move, { passive });
+  document.addEventListener('pointerup', up);
+  document.addEventListener('pointercancel', cn);
+  return stop;
+}
+// Double-tap on `el` → fn(), run on the second tap's pointerup (iOS opens the
+// keyboard only from a touchend-like event). The second pointerdown is
+// preventDefault-ed so the compat mouse events don't steal focus from an editor.
+function onDoubleTap(el, key, fn){
+  let armed = false;
+  el.addEventListener('pointerdown', e=>{ if(isDoubleTap(key, e)){ armed = true; e.preventDefault(); } });
+  el.addEventListener('pointerup', ()=>{ if(armed){ armed = false; fn(); } });
+}
+
 function laneEl(track){ return document.getElementById(track==='rhythm' ? 'rhythmLane' : 'lane'); }
-function renderLane(){ renderTrackLane('chord'); }
-function renderRhythmLane(){ renderTrackLane('rhythm'); }
 
 function renderTrackLane(track){
   const lane = laneEl(track);
@@ -2385,9 +2273,6 @@ function startBlockGesture(e, track, id){
   };
   const onUp = ()=>{
     clearTimeout(pressTimer);
-    document.removeEventListener('pointermove', onMove);
-    document.removeEventListener('pointerup', onUp);
-    document.removeEventListener('pointercancel', onUp);
     if(g.mode==='cancelled') return;
     if(g.mode==='press'){
       // plain tap on a block of a multi-selection → just that block (after the double-tap window)
@@ -2416,9 +2301,7 @@ function startBlockGesture(e, track, id){
       syncSelection(); renderTimeline(); renderBottomPanel();
     }
   };
-  document.addEventListener('pointermove', onMove, { passive:false });
-  document.addEventListener('pointerup', onUp);
-  document.addEventListener('pointercancel', onUp);
+  trackPointer(onMove, onUp, { passive:false });
 }
 
 // Upward flick at release: the finger moved up fast during the last
@@ -2449,7 +2332,7 @@ function deleteItems(track, ids){
 // inside a block → its nearer edge; what follows is pushed as needed).
 function duplicateTo(track, ids, delta){
   const items = trackItems(track);
-  const copies = items.filter(it=>ids.includes(it.id)).map(it=>{ const c = JSON.parse(JSON.stringify(it)); c.id = newId(); return c; });
+  const copies = items.filter(it=>ids.includes(it.id)).map(it=>{ const c = structuredClone(it); c.id = newId(); return c; });
   if(!copies.length) return;
   items.push(...copies); sortTrack(track);
   moveItems(track, copies.map(c=>c.id), delta);
@@ -2498,12 +2381,11 @@ function startLaneGesture(e, track){
   const timer = setTimeout(()=>{ if(!g.done && !twoFinger.active){ g.done = true; pressFeedback(g.x0, g.y0); addAt(track, 'repeat', beat); } }, LONG_PRESS_MS);
   const end = commit => {
     clearTimeout(timer);
-    document.removeEventListener('pointermove', onMove); document.removeEventListener('pointerup', onUp); document.removeEventListener('pointercancel', onCancel);
     if(commit && !g.done){ g.done = true; addAt(track, 'block', beat); }
   };
-  const onMove = ev=>{ if(twoFinger.active || Math.hypot(ev.clientX-g.x0, ev.clientY-g.y0) > DOUBLE_TAP_PX){ g.done = true; end(false); } };
-  const onUp = ()=>end(true), onCancel = ()=>{ g.done = true; end(false); };
-  document.addEventListener('pointermove', onMove); document.addEventListener('pointerup', onUp); document.addEventListener('pointercancel', onCancel);
+  // moving away (or a second finger) ends the gesture early, adding nothing
+  const stop = trackPointer(ev=>{ if(twoFinger.active || Math.hypot(ev.clientX-g.x0, ev.clientY-g.y0) > DOUBLE_TAP_PX){ g.done = true; stop(); end(false); } },
+    ()=>end(true), { cancel: ()=>{ g.done = true; end(false); } });
 }
 
 // ── Two-finger horizontal scroll of the timeline (one finger is for taps and
@@ -2636,8 +2518,7 @@ function startResize(e, track, id){
     len = Math.min(maxLen, Math.max(Math.min(gb, maxLen), snapTick(len)));
     if(Math.abs(len - it.beats) > EPS){ it.beats = snapTick(len); renderLanes(); if(document.getElementById('lenVal')) renderBottomPanel(); }
   };
-  const onUp = ()=>{ document.removeEventListener('pointermove',onMove); document.removeEventListener('pointerup',onUp); document.removeEventListener('pointercancel',onUp); };
-  document.addEventListener('pointermove',onMove); document.addEventListener('pointerup',onUp); document.addEventListener('pointercancel',onUp);
+  trackPointer(onMove, ()=>{});
 }
 
 function renderLanes(){ renderTrackLane('chord'); renderTrackLane('rhythm'); }
@@ -2645,15 +2526,10 @@ function renderLanes(){ renderTrackLane('chord'); renderTrackLane('rhythm'); }
 function selectRhythmBlock(i){ setSelection('rhythm', [S.rhythmBlocks[i].id]); renderLanes(); renderBottomPanel(); }
 
 // ═══════════════════════════════════════════════════════
-//  M9: Bottom Panel — auto-switches between chord Inspector (with
-//  Suggestions integrated), the step sequencer for a selected rhythm
-//  block, and an empty state, based on which track is currently
-//  selected. Selecting a chord clears any rhythm-block selection and
-//  vice versa (selectRhythmBlock does the same in reverse), so the two
-//  are always mutually exclusive — exactly one of the three states is
-//  ever shown.
+//  M9: Block editor (region 3) — shows what the selection is: one chord (the
+//  inspector), one rhythm block (the step grid), a repeat, several blocks, or
+//  nothing. The selection is always on one track at a time.
 // ═══════════════════════════════════════════════════════
-function selectChord(i){ setSelection('chord', [S.chords[i].id]); renderLanes(); renderBottomPanel(); }
 function selectTrack(track){ setSelection(track, []); renderLanes(); renderBottomPanel(); }
 
 function renderBottomPanel(){
@@ -2760,7 +2636,7 @@ function addItem(track){
 function duplicateSelection(){
   const span = selectionSpan(); if(!span) return;
   const copies = selectedItems().map(it=>{
-    const c = JSON.parse(JSON.stringify(it)); c.id = newId(); c.startBeat = snapTick(it.startBeat - span.start); return c;
+    const c = structuredClone(it); c.id = newId(); c.startBeat = snapTick(it.startBeat - span.start); return c;
   });
   insertItems(S.selTrack, copies, span.end);
   setSelection(S.selTrack, copies.map(c=>c.id));
@@ -2879,7 +2755,7 @@ function presetOfBlock(block){
 }
 function applyPresetToBlock(block, pr){
   const p = presetPattern(pr, block.beats); block.nSteps = p.nSteps; block.pattern = p.pattern;
-  renderRhythmLane(); renderBottomPanel();
+  renderTrackLane('rhythm'); renderBottomPanel();
 }
 // A new rhythm block (at beat 0) holding a preset, as long as the preset rounded up to whole bars
 function presetBlock(pr){
@@ -2953,10 +2829,7 @@ function paletteAppend(track, it){
 // Where an item dropped at `beat` lands (same rule as moveItems)
 function paletteDropStart(track, beat){
   const g = gridBeats();
-  let start = Math.max(0, snapTick(Math.floor(beat / g + EPS) * g));
-  const host = trackItems(track).find(r => r.startBeat < start - EPS && itemEnd(r) > start + EPS);
-  if(host) start = (start - host.startBeat <= itemEnd(host) - start) ? host.startBeat : itemEnd(host);
-  return start;
+  return landingStart(trackItems(track), Math.max(0, snapTick(Math.floor(beat / g + EPS) * g)));
 }
 function paletteDrop(track, it, beat){
   it.startBeat = 0;
@@ -3002,17 +2875,12 @@ function wirePaletteChip(btn, track, make, onAdded, onTap){
     };
     const onUp = ev=>{
       clearTimeout(timer);
-      document.removeEventListener('pointermove', onMove);
-      document.removeEventListener('pointerup', onUp);
-      document.removeEventListener('pointercancel', onUp);
       if(g.mode === 'drag'){
         g.ghost.remove(); g.mark.remove();
         if(ev.type === 'pointerup' && g.beat != null){ paletteDrop(track, g.item, g.beat); onAdded && onAdded(g.item, '配置'); }
       } else if(g.mode === 'press' && onTap) onTap();
     };
-    document.addEventListener('pointermove', onMove, { passive:false });
-    document.addEventListener('pointerup', onUp);
-    document.addEventListener('pointercancel', onUp);
+    trackPointer(onMove, onUp, { passive:false });
   });
 }
 function wireChordChip(btn, c){
@@ -3047,33 +2915,20 @@ function deleteSelected(){
   deleteItems(S.selTrack, its.map(i=>i.id));
 }
 
-// Builds a vertical "slot machine" wheel picker modeled on iOS's native
-// UIPickerView feel: the current value sits centered, with neighboring
-// values faintly visible above/below. Unlike a simple step-by-step
-// control, this tracks a CONTINUOUS position (a float, not an integer
-// index) so dragging follows the finger pixel-for-pixel, and releasing
-// the drag carries momentum that decelerates and eases into a snap at
-// the nearest value — the same physics feel as scrolling a native
-// picker or UIScrollView.
-//
-// options: array of { value, label, extraClass? }
-// selectedValue: the currently-active value (matched via ===)
-// onSelect: callback(value) fired whenever the settled selection changes
-// scale: optional unitless multiplier (default 1) applied to every
-//   dimension in the wheel via the --wheel-scale CSS custom property.
-// Tracks one AbortController per wheel container across repeated
-// buildWheel() calls, so that re-invoking buildWheel on the SAME
-// container (which happens routinely — e.g. a wheel's own onSelect
-// callback commonly triggers a re-render that calls buildWheel again
-// on that same element) always tears down the PREVIOUS gesture's
-// pointerdown/pointermove/pointerup/pointercancel/wheel listeners
-// before attaching a fresh set. Without this, every value change during
-// a drag (which fires on nearly every pointermove) would stack 5 more
-// listeners onto the container without ever removing the old ones —
-// after a few seconds of dragging, thousands of duplicate listeners
-// accumulate, and the page progressively grinds to a halt as every
-// subsequent pointer event has to invoke all of them.
+// A vertical "slot machine" wheel picker with the feel of iOS's UIPickerView:
+// the position is continuous, so a drag follows the finger pixel for pixel and
+// a fling decelerates into the nearest row.
+//   options        [{ value, label, extraClass? }]
+//   selectedValue  the current value (matched with ===)
+//   onSelect(v)    called once the wheel settles on a different value (never
+//                  mid-drag: callers re-render, DESIGN.md Layer 6.5 原則6)
+//   scale          optional size multiplier (--wheel-scale)
+// Building again on the same container first aborts the previous listeners
+// (原則1: otherwise they pile up). To only show another value, use
+// setWheelValue(container, v) — the toolbar's wheels are built once.
 const _wheelAbortControllers = new WeakMap();
+const _wheelSetters = new WeakMap();
+function setWheelValue(container, value){ const set = _wheelSetters.get(container); if(set) set(value); }
 
 function buildWheel(container, options, selectedValue, onSelect, scale){
   // Tear down whatever listeners a previous buildWheel() call on this
@@ -3284,6 +3139,14 @@ function buildWheel(container, options, selectedValue, onSelect, scale){
     wheelTarget = base + delta;
     glideTo(wheelTarget, SETTLE_TAU);
   }, { passive:false, signal });
+
+  // Show `value` without calling onSelect (ignored while the user is turning it)
+  _wheelSetters.set(container, value => {
+    const i = options.findIndex(o => o.value === value);
+    if(i < 0 || dragging || animHandle != null) return;
+    if(Math.abs(position - Math.round(position)) < 1e-6 && ((Math.round(position) % n) + n) % n === i) return;
+    position = i; lastReportedIdx = i; render();
+  });
 }
 
 // ── Chord name: direct text entry, in place of the name display ──────────
@@ -3293,11 +3156,11 @@ function buildWheel(container, options, selectedValue, onSelect, scale){
 // moves on to the next chord's name (Shift+Tab: previous).
 const DOUBLE_TAP_MS = 320, DOUBLE_TAP_PX = 12;
 let lastTap = null;        // {key, t, x, y} of the previous pointerdown
-let pendingNameEdit = null; // set on a double-tap's pointerdown, consumed on its pointerup
-function isDoubleTap(key, e){
+// Two pointerdowns on the same `key` within `ms` and `px` of each other.
+function isDoubleTap(key, e, { ms = DOUBLE_TAP_MS, px = DOUBLE_TAP_PX } = {}){
   const now = performance.now();
-  const hit = lastTap && lastTap.key===key && now-lastTap.t <= DOUBLE_TAP_MS
-    && Math.hypot(e.clientX-lastTap.x, e.clientY-lastTap.y) <= DOUBLE_TAP_PX;
+  const hit = lastTap && lastTap.key===key && now-lastTap.t <= ms
+    && Math.hypot(e.clientX-lastTap.x, e.clientY-lastTap.y) <= px;
   lastTap = hit ? null : { key, t:now, x:e.clientX, y:e.clientY };
   return hit;
 }
@@ -3452,15 +3315,7 @@ function renderInspector(){
         c.root = val; c.bass = val;
         renderTimeline(); renderBottomPanel(); previewChord(c); return;
       }
-      // Root-following bass, preserving the bass-to-root INTERVAL rather
-      // than either fully tracking or fully freezing the absolute note.
-      // The offset (in semitones) between bass and root is what actually
-      // defines the on-chord's sonic character (e.g. "a major 3rd in the
-      // bass"), so transposing that offset along with the root is what
-      // keeps that character intact even after the user has explicitly
-      // chosen a bass note. bass===root (offset 0, "no on-chord") is
-      // naturally included as just the offset-0 case — no special-casing
-      // needed.
+      // the bass keeps its interval to the root (C/E → D/F♯); no on-chord = interval 0
       const offset = ((c.bass - c.root) % 12 + 12) % 12;
       c.root = val;
       c.bass = (val + offset) % 12;
@@ -3516,9 +3371,7 @@ function renderInspector(){
 
   // Double-tap on the name → edit in place (own detection: a touch double-tap
   // doesn't reliably fire dblclick on iOS)
-  const nameEl = document.getElementById('insName');
-  nameEl.addEventListener('pointerdown', e=>{ if(isDoubleTap('insName', e)){ pendingNameEdit = 'name'; e.preventDefault(); } });
-  nameEl.addEventListener('pointerup', ()=>{ if(pendingNameEdit === 'name'){ pendingNameEdit = null; startNameEdit(); } });
+  onDoubleTap(document.getElementById('insName'), 'insName', startNameEdit);
 
 }
 
@@ -3528,74 +3381,28 @@ function renderInspector(){
 function renderSuggestions(){
   const panel=document.getElementById('suggestionsPanel');
   if(!panel) return;
-  panel.innerHTML='';
-  const row=document.createElement('div');
-  row.className='sug-sec';
-
+  // based on the selected chord, else the last chord with a name
   const setChords = S.chords.filter(c=>!isRepeat(c) && c.root!=null);
-  let fromChord = setChords.length ? setChords[setChords.length-1] : {root:0,triad:'',tensions:[],bass:0};
   const selC = S.selectedIdx>=0 ? S.chords[S.selectedIdx] : null;
-  if(selC && !isRepeat(selC) && selC.root!=null) fromChord = selC;
-
-  const rel=(fromChord.root-(S.keyIdx>=0?S.keyIdx:0)+12)%12;
-  const di=MAJOR_IVLS.indexOf(rel);
-  const nexts=di>=0?SUGGESTIONS_TABLE[di]:[3,4];
-
-  const title=document.createElement('div');
-  title.className='sug-title';
-  title.textContent='次のコード候補 ('+chordName(fromChord)+' の後)';
-  row.appendChild(title);
-
-  const sr=document.createElement('div'); sr.className='sug-row';
-  nexts.forEach(deg=>{
-    const root=(((S.keyIdx>=0?S.keyIdx:fromChord.root)+MAJOR_IVLS[deg])%12);
-    const triad=MAJOR_TYPES[deg];
-    const c={root,triad,tensions:[],bass:root};
-    const btn=document.createElement('button');
-    btn.className='sug-chip';
-    btn.textContent=chordName(c);
-    btn.title=TRIADS[triad]?.name??'';
-    wireChordChip(btn, c);
-    sr.appendChild(btn);
-  });
-  row.appendChild(sr);
-
-  if(S.keyIdx>=0){
-    const t2=document.createElement('div');
-    t2.className='sug-title'; t2.style.marginTop='10px';
-    t2.textContent='スケール上のコード (Key: '+KEY_NAMES[S.keyIdx]+')';
-    row.appendChild(t2);
-    const sr2=document.createElement('div'); sr2.className='sug-row';
-    MAJOR_IVLS.forEach((iv,idx)=>{
-      const root=(S.keyIdx+iv)%12;
-      const triad=MAJOR_TYPES[idx];
-      const c={root,triad,tensions:[],bass:root};
-      const btn=document.createElement('button');
-      btn.className='sug-chip';
-      btn.textContent=chordName(c);
+  const fromChord = (selC && !isRepeat(selC) && selC.root!=null) ? selC : (setChords.at(-1) || { root:0, triad:'', tensions:[], bass:0 });
+  const base = S.keyIdx>=0 ? S.keyIdx : fromChord.root;
+  const di = MAJOR_IVLS.indexOf((fromChord.root - (S.keyIdx>=0 ? S.keyIdx : 0) + 12) % 12);
+  const diatonic = deg => { const root = (base + MAJOR_IVLS[deg]) % 12; return { root, triad: MAJOR_TYPES[deg], tensions: [], bass: root }; };
+  panel.innerHTML = '<div class="sug-sec"></div>';
+  const sec = panel.firstChild;
+  const section = (title, chords) => {
+    const t = document.createElement('div'); t.className = 'sug-title'; t.textContent = title;
+    const row = document.createElement('div'); row.className = 'sug-row';
+    chords.forEach(c=>{
+      const btn = document.createElement('button');
+      btn.className = 'sug-chip'; btn.textContent = chordName(c); btn.title = TRIADS[c.triad]?.name ?? '';
       wireChordChip(btn, c);
-      sr2.appendChild(btn);
+      row.appendChild(btn);
     });
-    row.appendChild(sr2);
-  }
-  panel.appendChild(row);
-}
-
-// ═══════════════════════════════════════════════════════
-//  M8: Add chord
-// ═══════════════════════════════════════════════════════
-// M8: Chord Track UI — shared "append at end" helper
-// ─────────────────────────────────────────────────────────
-// Used by both the Add-chord button and the Suggestions chips. Places
-// a new chord immediately after the current last chord's end, growing
-// S.timelineBars if needed so the new chord always fits — existing
-// chords' startBeat values are never touched.
-function appendChordAtEnd(partialChord, beats){
-  beats = beats ?? S.timeSig.beatsPerBar;
-  const startBeat = Math.max(0, ...S.chords.map(itemEnd));
-  const c = mkChord(partialChord, startBeat, beats);
-  S.chords.push(c); sortTrack('chord'); fitTimeline();
-  return c;
+    sec.append(t, row);
+  };
+  section('次のコード候補 (' + chordName(fromChord) + ' の後)', (di>=0 ? SUGGESTIONS_TABLE[di] : [3,4]).map(diatonic));
+  if(S.keyIdx>=0) section('スケール上のコード (Key: ' + KEY_NAMES[S.keyIdx] + ')', MAJOR_IVLS.map((_, d)=>diatonic(d)));
 }
 
 document.getElementById('btnDeleteBlock').onclick = deleteSelected;
@@ -3797,7 +3604,7 @@ function handleGlobalKey(e){
   if(k==='Tab' && S.selTrack==='rhythm' && selectedRhythmBlock()){ startStepEdit(); return true; }   // Tab → keyboard step editing
   if(k==='Tab'){
     // Tab → type the selected chord's name (nothing selected: start from the first chord)
-    if(!S.sel.length && S.chords.length){ const i = S.chords.findIndex(c=>!isRepeat(c)); if(i>=0) selectChord(i); }
+    if(!S.sel.length && S.chords.length){ const i = S.chords.findIndex(c=>!isRepeat(c)); if(i>=0){ setSelection('chord', [S.chords[i].id]); renderLanes(); renderBottomPanel(); } }
     if(S.selectedIdx>=0 && S.selectedIdx<S.chords.length){ startNameEdit(); return true; }
   }
   return false;
@@ -3902,7 +3709,6 @@ document.addEventListener('keydown',e=>{
 //  M11: Drum Track rendering — operates on the currently SELECTED
 //  rhythm block (S.selectedBlockIdx), not a single global pattern.
 // ═══════════════════════════════════════════════════════
-const DSTEP_W = 24; // px per step (label col fixed at 100px separately)
 const STEP_RESOLUTIONS = [4,6,8,12,16,24,32,48,64]; // step counts per BLOCK (the block is divided, not the bar)
 
 function selectedRhythmBlock(){
@@ -3925,26 +3731,15 @@ function renderDrumStepsHeader(){
   wireRhythmPreset(block);
 
   document.getElementById('stepsSelect').addEventListener('change', e=>{
-    const n = +e.target.value;
-    {
-      // Resample the pattern to the new step count, preserving hits at
-      // their nearest new-resolution position (best-effort; changing
-      // resolution is a deliberate user action, some snapping is
-      // expected and acceptable here).
-      const oldN = block.nSteps;
-      const newPattern = block.pattern.map(track=>{
-        const arr = Array(n).fill(0);
-        track.forEach((vel,i)=>{
-          if(vel<=0) return;
-          const newIdx = Math.min(n-1, Math.round(i * (n/oldN)));
-          arr[newIdx] = vel;
-        });
-        return arr;
-      });
-      block.nSteps = n;
-      block.pattern = newPattern;
-      renderDrumStepsHeader(); renderRhythmLane(); renderDrumGrid();
-    }
+    // Resample to the new step count: each hit moves to the nearest new step
+    const n = +e.target.value, oldN = block.nSteps;
+    block.pattern = block.pattern.map(row=>{
+      const arr = Array(n).fill(0);
+      row.forEach((vel, i)=>{ if(vel > 0) arr[Math.min(n-1, Math.round(i * n / oldN))] = vel; });
+      return arr;
+    });
+    block.nSteps = n;
+    renderDrumStepsHeader(); renderTrackLane('rhythm'); renderDrumGrid();
   });
 }
 
@@ -3980,13 +3775,30 @@ function velColor(vel,color){
   return color+'55';
 }
 
+// One step cell's look: colour by velocity, ▲ strong / ▼ weak, white while it's the playing step
+function paintStepCell(btn, vel, color, playing){
+  btn.style.background = playing && vel>0 ? '#FFFFFF' : velColor(vel, color);
+  btn.innerHTML = vel>0 && vel!==2 ? `<span class="vel-mark" style="color:${vel===3 ? (playing ? '#000' : '#000A') : (playing ? color : color+'AA')}">${vel===3?'▲':'▼'}</span>` : '';
+  btn.classList.toggle('cur', playing);
+}
+// Selection / drop target / keyboard cursor, its row and column: classes only,
+// no rebuild (the grid is rebuilt only when the pattern or block changes)
+function paintStepState(){
+  const ed = StepEd, cur = ed.cursor;
+  document.querySelectorAll('#drumGridInner .dstep').forEach(btn=>{
+    const ti = +btn.dataset.ti, si = +btn.dataset.si, k = stepKey(ti, si);
+    const isCur = ed.editing && ti===cur.ti && si===cur.si;
+    btn.classList.toggle('ssel', ed.sel.has(k));
+    btn.classList.toggle('drop', !!(ed.drop && ed.drop.has(k)));
+    btn.classList.toggle('kcur', isCur);
+    btn.classList.toggle('kline', !isCur && ed.editing && (ti===cur.ti || si===cur.si));
+  });
+  document.querySelectorAll('#drumLabels .drow-label').forEach((l, ti)=>l.classList.toggle('kline', ed.editing && cur.ti===ti));
+}
 function renderDrumGrid(){
   scheduleCheckpoint();
   const inner=document.getElementById('drumGridInner');
-  const outer=document.getElementById('drumGridOuter');
   const labelsCol=document.getElementById('drumLabels');
-  inner.innerHTML='';
-
   const block = selectedRhythmBlock();
   if(!block){
     if(labelsCol) labelsCol.innerHTML='';
@@ -3995,41 +3807,25 @@ function renderDrumGrid(){
   }
   stepEdSync(block);
   renderDrumLabels();
-
-  const nSteps = block.nSteps;
-  const ed = StepEd, cur = ed.cursor;
-  const isPlayingThisBlock = (S.drumStepBlockIdx === S.selectedBlockIdx);
-  // visual grouping: one group per beat when the steps divide the beats evenly, else by 4
+  const nSteps = block.nSteps, playing = S.drumStepBlockIdx === S.selectedBlockIdx;
+  // a gap before each beat when the steps divide the beats evenly, else every 4 steps
   const perBeat = nSteps / block.beats;
   const groupStart = si => si>0 && (Number.isInteger(perBeat) && perBeat>=1 ? si % perBeat === 0 : si % 4 === 0);
-
-  DRUM_TRACKS.forEach((t,ti)=>{
-    const row=document.createElement('div');
-    row.className='drum-row';
-    for(let si=0; si<nSteps; si++){
-      const vel = block.pattern[ti][si];
-      const isCur = isPlayingThisBlock && si===S.drumStep;
-      const btn=document.createElement('button');
-      const k = stepKey(ti, si);
-      btn.className='dstep'+(groupStart(si)?' bar-start':'')+(isCur?' cur':'')
-        + (ed.sel.has(k)?' ssel':'') + (ed.drop && ed.drop.has(k)?' drop':'')
-        + (ed.editing && ti===cur.ti && si===cur.si ? ' kcur' : (ed.editing && (ti===cur.ti || si===cur.si) ? ' kline' : ''));
-      btn.dataset.ti = ti; btn.dataset.si = si;
-      btn.style.background = isCur && vel>0 ? '#FFFFFF' : velColor(vel,t.color);
-      if(vel>0 && vel!==2){
-        btn.innerHTML=`<span class="vel-mark" style="color:${vel===3?(isCur?'#000':'#000A'):t.color+'AA'}">${vel===3?'▲':'▼'}</span>`;
-      }
-      btn.oncontextmenu=(e)=>{
-        e.preventDefault();
-        const cur=block.pattern[ti][si];
-        block.pattern[ti][si] = cur===0?2:cur===1?2:cur===2?3:1;
-        renderDrumGrid(); renderRhythmLane();
-      };
-      row.appendChild(btn);
-    }
-    inner.appendChild(row);
+  inner.innerHTML = DRUM_TRACKS.map((t, ti) => `<div class="drum-row">${Array.from({ length: nSteps }, (_, si) =>
+    `<button class="dstep${groupStart(si)?' bar-start':''}" data-ti="${ti}" data-si="${si}"></button>`).join('')}</div>`).join('');
+  inner.querySelectorAll('.dstep').forEach(btn=>{
+    const ti = +btn.dataset.ti, si = +btn.dataset.si;
+    paintStepCell(btn, block.pattern[ti][si], DRUM_TRACKS[ti].color, playing && si===S.drumStep);
   });
+  paintStepState();
   inner.onpointerdown = e => startStepGesture(e, block);
+  inner.oncontextmenu = e => {            // right-click: cycle the velocity (weak → normal → strong)
+    const c = e.target.closest('.dstep'); if(!c) return;
+    e.preventDefault();
+    const row = block.pattern[+c.dataset.ti], si = +c.dataset.si, v = row[si];
+    row[si] = v===0 ? 2 : v===1 ? 2 : v===2 ? 3 : 1;
+    stepChanged();
+  };
 }
 
 // ═══════════════════════════════════════════════════════
@@ -4055,7 +3851,7 @@ function stepRect(a, b){
     for(let si = Math.min(a.si, b.si); si <= Math.max(a.si, b.si); si++) out.add(stepKey(ti, si));
   return out;
 }
-function stepChanged(){ renderDrumGrid(); renderRhythmLane(); }   // the lane shows empty blocks differently
+function stepChanged(){ renderDrumGrid(); renderTrackLane('rhythm'); }   // the lane shows empty blocks differently
 function stepToggle(block, ti, si){ block.pattern[ti][si] = block.pattern[ti][si] ? 0 : 2; }
 // Moves (or copies) the contents of `keys` by (dti, dsi): rests move too (a
 // rest is a cell). The offset is clamped so the whole selection stays on the
@@ -4093,7 +3889,7 @@ function startStepGesture(e, block){
   if(additive){ wasSel ? StepEd.sel.delete(k) : StepEd.sel.add(k); }
   else if(!wasSel){ StepEd.sel = new Set([k]); }
   StepEd.cursor = { ti, si }; StepEd.anchor = { ti, si };
-  renderDrumGrid();
+  paintStepState();
   const g = { mode:'press', x0:e.clientX, y0:e.clientY, ti0:ti, si0:si, dbl, delta:[0, 0], trail:[{ t:performance.now(), y:e.clientY }] };
   const timer = setTimeout(()=>{
     if(g.mode !== 'press' || g.dbl || twoFinger.active) return;
@@ -4105,7 +3901,7 @@ function startStepGesture(e, block){
   const showDrop = ()=>{
     const [dti, dsi] = g.delta;
     StepEd.drop = new Set(stepCells(StepEd.sel).map(([a, b]) => stepKey(a + dti, b + dsi)));
-    renderDrumGrid();
+    paintStepState();
   };
   const onMove = ev=>{
     if(twoFinger.active){ clearTimeout(timer); g.mode = 'cancelled'; StepEd.drop = null; return; }
@@ -4115,7 +3911,7 @@ function startStepGesture(e, block){
     if(!at) return;
     if(g.mode === 'range'){
       const r = stepRect({ ti:g.ti0, si:g.si0 }, at);
-      if([...r].join() !== [...StepEd.sel].join()){ StepEd.sel = r; StepEd.cursor = at; renderDrumGrid(); }
+      if([...r].join() !== [...StepEd.sel].join()){ StepEd.sel = r; StepEd.cursor = at; paintStepState(); }
     } else if(g.mode === 'move' || g.mode === 'dup'){
       const d = stepDelta(g, at.ti, at.si);
       if(d.join() !== g.delta.join()){ g.delta = d; showDrop(); }
@@ -4123,15 +3919,12 @@ function startStepGesture(e, block){
   };
   const onUp = ()=>{
     clearTimeout(timer);
-    document.removeEventListener('pointermove', onMove);
-    document.removeEventListener('pointerup', onUp);
-    document.removeEventListener('pointercancel', onUp);
     StepEd.drop = null;
     if(g.mode === 'press'){
-      if(g.dbl && StepEd.editing){ StepEd.sel = new Set([k]); renderDrumGrid(); return; }   // keyboard editing: a double-tap only moves the cursor here
+      if(g.dbl && StepEd.editing){ StepEd.sel = new Set([k]); paintStepState(); return; }   // keyboard editing: a double-tap only moves the cursor here
       if(g.dbl){ stepToggle(block, ti, si); stepChanged(); return; }        // double-tap = input
       if(!additive && wasSel && StepEd.sel.size > 1){                         // tap inside a multi-selection: narrow after the double-tap window
-        StepEd.narrow = setTimeout(()=>{ StepEd.narrow = null; StepEd.sel = new Set([k]); renderDrumGrid(); }, DOUBLE_TAP_MS);
+        StepEd.narrow = setTimeout(()=>{ StepEd.narrow = null; StepEd.sel = new Set([k]); paintStepState(); }, DOUBLE_TAP_MS);
       }
     } else if(g.mode === 'move' || g.mode === 'dup'){
       if(isFlickUp(g)){
@@ -4141,11 +3934,9 @@ function startStepGesture(e, block){
       stepMoveCells(block, StepEd.sel, g.delta[0], g.delta[1], g.mode === 'dup');
       stepChanged(); return;
     }
-    renderDrumGrid();
+    paintStepState();
   };
-  document.addEventListener('pointermove', onMove, { passive:false });
-  document.addEventListener('pointerup', onUp);
-  document.addEventListener('pointercancel', onUp);
+  trackPointer(onMove, onUp, { passive:false });
 }
 
 // Keyboard-only editing (enter with Tab). A highlighted cell is the cursor; its row and column
@@ -4157,9 +3948,9 @@ function startStepEdit(){
   StepEd.editing = true;
   if(!StepEd.sel.size) StepEd.sel = new Set([stepKey(StepEd.cursor.ti, StepEd.cursor.si)]);
   StepEd.anchor = { ...StepEd.cursor };
-  renderDrumGrid(); scrollStepCursorIntoView();
+  paintStepState(); scrollStepCursorIntoView();
 }
-function endStepEdit(){ StepEd.editing = false; StepEd.sel = new Set(); renderDrumGrid(); }
+function endStepEdit(){ StepEd.editing = false; StepEd.sel = new Set(); paintStepState(); }
 function scrollStepCursorIntoView(){
   const c = document.querySelector('#drumGridInner .dstep.kcur'), o = document.getElementById('drumGridOuter');
   if(!c || !o) return;
@@ -4182,7 +3973,7 @@ function stepEditKey(e){
       StepEd.cursor = { ti: Math.max(0, Math.min(nT - 1, cur.ti + dt)), si: Math.max(0, Math.min(nS - 1, cur.si + ds)) };
       if(e.shiftKey) StepEd.sel = stepRect(StepEd.anchor || cur, StepEd.cursor);
       else { StepEd.sel = new Set([stepKey(StepEd.cursor.ti, StepEd.cursor.si)]); StepEd.anchor = { ...StepEd.cursor }; }
-      renderDrumGrid();
+      paintStepState();
     }
     scrollStepCursorIntoView();
   } else if(!mod && !e.altKey && e.shiftKey && STEP_NOTE_KEYS[e.key.toLowerCase()]){
@@ -4236,41 +4027,20 @@ function stepEditKey(e){
 }
 
 function updateDrumStepUI(){
-  // Only the step grid for the SELECTED block shows a live playhead —
-  // if a different (non-selected) block is currently sounding, there's
-  // nothing to highlight in the visible grid, but the rhythm lane's
-  // 'playing' block outline (handled in renderRhythmLane/updatePlayheadEl)
-  // still shows which block is active.
+  // The grid shows a playhead only while its own (selected) block is sounding;
+  // the lane outlines whichever block is sounding.
   const isPlayingSelectedBlock = (S.drumStepBlockIdx === S.selectedBlockIdx) && S.selectedBlockIdx>=0;
   const block = selectedRhythmBlock();
-
   const rows = document.querySelectorAll('#drumGridInner .drum-row');
   if(rows.length && block){
-    rows.forEach((row,ti)=>{
-      const steps = row.children;
-      if(lastDrumStepHighlighted>=0 && steps[lastDrumStepHighlighted]){
-        const prevBtn = steps[lastDrumStepHighlighted];
-        const vel = block.pattern[ti][lastDrumStepHighlighted];
-        prevBtn.classList.remove('cur');
-        prevBtn.style.background = velColor(vel, DRUM_TRACKS[ti].color);
-        prevBtn.innerHTML = (vel>0 && vel!==2) ? `<span class="vel-mark" style="color:${vel===3?'#000A':DRUM_TRACKS[ti].color+'AA'}">${vel===3?'▲':'▼'}</span>` : '';
-      }
-      if(isPlayingSelectedBlock && S.drumStep>=0 && steps[S.drumStep]){
-        const curBtn = steps[S.drumStep];
-        const vel = block.pattern[ti][S.drumStep];
-        curBtn.classList.add('cur');
-        curBtn.style.background = vel>0 ? '#FFFFFF' : curBtn.style.background;
-        if(vel>0 && vel!==2){
-          curBtn.innerHTML = `<span class="vel-mark" style="color:${vel===3?'#000':DRUM_TRACKS[ti].color}">${vel===3?'▲':'▼'}</span>`;
-        }
-      }
+    rows.forEach((row, ti)=>{
+      const steps = row.children, color = DRUM_TRACKS[ti].color;
+      if(lastDrumStepHighlighted>=0 && steps[lastDrumStepHighlighted]) paintStepCell(steps[lastDrumStepHighlighted], block.pattern[ti][lastDrumStepHighlighted], color, false);
+      if(isPlayingSelectedBlock && S.drumStep>=0 && steps[S.drumStep]) paintStepCell(steps[S.drumStep], block.pattern[ti][S.drumStep], color, true);
     });
   }
   lastDrumStepHighlighted = isPlayingSelectedBlock ? S.drumStep : -1;
 
-  // Regardless of grid highlighting, always refresh the rhythm lane's
-  // per-block 'playing' outline so the currently-sounding block is
-  // visually distinguishable even when it's not the selected one.
   document.querySelectorAll('.rblock').forEach((el,i)=>{
     el.classList.toggle('playing', i===S.drumStepBlockIdx);
   });
@@ -4297,14 +4067,6 @@ function renderStepSequencerPanel(){
   renderDrumGrid();
 }
 
-function renderDrumAll(){
-  renderRhythmLane();
-  // The step-editing area only exists in the DOM when the bottom panel
-  // is currently in step-sequencer mode (a rhythm block is selected);
-  // renderBottomPanel is the single source of truth for that, so we
-  // just ask it to re-evaluate rather than assuming the grid exists.
-  renderBottomPanel();
-}
 
 // ═══════════════════════════════════════════════════════
 //  M12: Save / Load
@@ -4530,30 +4292,20 @@ function collectMidiEvents(){
   const T = toTick(totalBeats()), toM = tick => Math.round(tick * MIDI_PPQ / TPB);
   const out = { song:[], bass:[], chords:[], drums:[] };
   resetVoicingState();
-  let prevKey = null;
   for(let p = 0; p < T; p++){
-    const r = resolveAt(S.chords, p);
-    const key = r && r.item && r.item.root != null ? r.idx + '@' + r.offset : null;
-    if(key && key !== prevKey){
-      const end = Math.min(toTick(itemEnd(r.item)) + r.offset, r.limit, T);
-      const v = computeVoicing(r.item), t = toM(p), len = toM(end) - t;
-      out.song.push({ t, text: chordSymbol(r.item).replaceAll('♯', '#').replaceAll('♭', 'b') });
+    const on = chordOnsetAt(p);
+    if(on && on.item.root != null){
+      const v = computeVoicing(on.item), t = toM(p), len = toM(Math.min(on.end, T)) - t;
+      out.song.push({ t, text: chordSymbol(on.item).replaceAll('♯', '#').replaceAll('♭', 'b') });
       out.bass.push({ t, len, note: v.bass + 12, vel: 100 });                // pitch 0 = C0 → MIDI 12
       v.upper.forEach(u => out.chords.push({ t, len, note: u + 12, vel: 85 }));
     }
-    prevKey = key;
-    const rr = resolveAt(S.rhythmBlocks, p);
-    if(rr && rr.item){
-      const b = rr.item, bs = toTick(b.startBeat), stepDur = toTick(b.beats) / b.nSteps;
-      const into = p - rr.offset - bs;
-      for(let s = Math.ceil(into / stepDur - 1e-9); s < b.nSteps && s * stepDur < into + 1 - 1e-9; s++){
-        if(bs + s * stepDur + rr.offset >= rr.limit - 1e-9) break;
-        const t = toM(p + s * stepDur - into);
-        b.pattern.forEach((row, ti) => {
-          const vel = row[s], note = GM_DRUMS[DRUM_TRACKS[ti].name];
-          if(vel > 0 && note && !b.muted?.[ti]) out.drums.push({ t, len: MIDI_PPQ / 8, note, vel: MIDI_VEL[vel] || 90 });
-        });
-      }
+    const { r, steps } = rhythmStepsAt(p);
+    for(const { s, dt } of steps){
+      r.item.pattern.forEach((row, ti) => {
+        const vel = row[s], note = GM_DRUMS[DRUM_TRACKS[ti].name];
+        if(vel > 0 && note && !r.item.muted?.[ti]) out.drums.push({ t: toM(p + dt), len: MIDI_PPQ / 8, note, vel: MIDI_VEL[vel] || 90 });
+      });
     }
   }
   resetVoicingState();
@@ -4616,11 +4368,7 @@ function loadProjectFromFile(file){
 
 document.getElementById('btnSave').onclick = saveProjectToFile;
 document.getElementById('btnMidi').onclick = exportMidi;
-{
-  const t = document.getElementById('songTitle');
-  t.addEventListener('pointerdown', e=>{ if(isDoubleTap('songTitle', e)){ e.preventDefault(); t.dataset.edit = '1'; } });
-  t.addEventListener('pointerup', ()=>{ if(t.dataset.edit){ delete t.dataset.edit; startTitleEdit(); } });
-}
+onDoubleTap(document.getElementById('songTitle'), 'songTitle', startTitleEdit);
 document.getElementById('fileInput').onchange = e=>{
   const f = e.target.files[0];
   if(!f) return;
@@ -4666,7 +4414,7 @@ function setTimelineScroll(v){
 //  (M13 + M8 + M9 + M11, see DESIGN.md Layer 4 "全体エントリポイント")
 // ═══════════════════════════════════════════════════════
 function renderAll(){
-  renderToolbar(); renderTimeline(); renderDrumAll();
+  renderToolbar(); renderTimeline(); renderBottomPanel();
 }
 renderAll();
 checkpoint();   // the starting point of the undo history
