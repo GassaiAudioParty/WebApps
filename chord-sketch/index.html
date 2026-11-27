@@ -294,7 +294,7 @@ html{touch-action:pan-x pan-y}   /* no pinch-zoom anywhere (iOS also gets gestur
   background:var(--accent-d);border:1px solid var(--accent);color:var(--text);font-weight:700;font-size:13px;box-shadow:0 6px 16px rgba(0,0,0,.6)}
 .drop-mark{position:absolute;top:6px;bottom:6px;border:2px dashed var(--yellow);background:rgba(240,192,64,.18);border-radius:3px;pointer-events:none;z-index:35}
 .side-note{font-size:11px;color:var(--text-dim);line-height:1.5}
-.mix-name{width:64px;font-size:10px;font-weight:600;letter-spacing:.03em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mix-name{width:70px;font-size:10px;font-weight:600;letter-spacing:.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .mix-vol{flex:1;min-width:0;accent-color:var(--accent)}
 .mix-val{width:24px;text-align:right;font-size:10px;color:var(--text-dim);font-variant-numeric:tabular-nums}
 
@@ -526,7 +526,7 @@ html{touch-action:pan-x pan-y}   /* no pinch-zoom anywhere (iOS also gets gestur
 .drow-label{
   /* must match a .drum-row's outer height (26px + 2×2px padding, content-box) or the labels drift away from their rows */
   height:30px;box-sizing:content-box;display:flex;align-items:center;justify-content:space-between;
-  padding:0 6px 0 10px;font-size:10px;letter-spacing:.03em;color:var(--text-mid);
+  padding:0 6px 0 8px;font-size:10px;letter-spacing:.01em;color:var(--text-mid);
   border-bottom:1px solid var(--lane-border);flex-shrink:0;gap:4px;
 }
 .drow-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
@@ -1146,26 +1146,34 @@ function degreeLabel(root, keyIdx){
 // ═══════════════════════════════════════════════════════
 //  M3: Drum tracks (integrated step sequencer) — kit definitions
 // ═══════════════════════════════════════════════════════
+// The kit, in the order of the step grid (2026-11-27): the backbeat (kick,
+// snare, clap), then the hi-hat (closed / open), the toms high → low, the
+// cymbal. Names put the family first (HAT …, TOM …) so the rows read as groups.
+//   freq: kick = where its pitch drop ends, tom = its pitch (others unused)
 const DRUM_TRACKS = [
-  { name:'KICK',    color:'#FF5566', freq:45,  type:'kick'    },
-  { name:'SNARE',   color:'#FFA030', freq:200, type:'snare'   },
-  { name:'HI-HAT',  color:'#30D9C0', freq:800, type:'hihat'   },
-  { name:'OPEN HH', color:'#B8E040', freq:600, type:'openhat' },
-  { name:'CLAP',    color:'#FF80D0', freq:300, type:'clap'    },
-  { name:'HI TOM',  color:'#C2A8FF', freq:210, type:'tom'     },   // 2026-11-22: three toms (high / low / floor)
-  { name:'LOW TOM', color:'#A08CFF', freq:150, type:'tom'     },
-  { name:'FLOOR',   color:'#8A78E8', freq:100, type:'tom'     },
-  { name:'CRASH',   color:'#FFD84A', freq:5200, type:'crash'  },
+  { name:'KICK',       color:'#FF5566', freq:45,  type:'kick'    },
+  { name:'SNARE',      color:'#FFA030', freq:185, type:'snare'   },
+  { name:'CLAP',       color:'#FF80D0', freq:0,   type:'clap'    },
+  { name:'HAT CLOSED', color:'#30D9C0', freq:0,   type:'hihat'   },
+  { name:'HAT OPEN',   color:'#B8E040', freq:0,   type:'openhat' },
+  { name:'TOM HIGH',   color:'#C2A8FF', freq:210, type:'tom'     },
+  { name:'TOM LOW',    color:'#A08CFF', freq:150, type:'tom'     },
+  { name:'TOM FLOOR',  color:'#8A78E8', freq:100, type:'tom'     },
+  { name:'CRASH',      color:'#FFD84A', freq:0,   type:'crash'   },
 ];
+const drumIdx = name => DRUM_TRACKS.findIndex(t => t.name === name);
 // Saved files list the kit by name (v9) so rows land on the right instrument
-// when the kit changes. Files without names: the first 5 rows are the
-// original kit; a 7-row file is the short-lived [.., TOM, CRASH] kit.
+// when the kit changes; older names are read through KIT_ALIASES. Files without
+// names: a 7-row file is the short-lived [.., TOM, CRASH] kit, otherwise the
+// rows are in the order the kit had until 2026-11-27 (LEGACY_KIT_9; its first
+// 5 rows are the original kit).
 const LEGACY_KIT_7 = ['KICK','SNARE','HI-HAT','OPEN HH','CLAP','TOM','CRASH'];
-const KIT_ALIASES = { 'TOM':'LOW TOM' };
+const LEGACY_KIT_9 = ['KICK','SNARE','HI-HAT','OPEN HH','CLAP','HI TOM','LOW TOM','FLOOR','CRASH'];
+const KIT_ALIASES = { 'TOM':'TOM LOW', 'HI-HAT':'HAT CLOSED', 'OPEN HH':'HAT OPEN', 'HI TOM':'TOM HIGH', 'LOW TOM':'TOM LOW', 'FLOOR':'TOM FLOOR' };
 // Re-orders saved per-instrument rows into the current kit order; missing rows get `fill()`.
 function kitRows(rows, names, fill){
   rows = rows || [];
-  if(!names) names = rows.length === LEGACY_KIT_7.length ? LEGACY_KIT_7 : DRUM_TRACKS.map(t=>t.name).slice(0, rows.length);
+  if(!names) names = rows.length === LEGACY_KIT_7.length ? LEGACY_KIT_7 : LEGACY_KIT_9.slice(0, rows.length);
   const byName = {}; names.forEach((n, i)=>{ byName[KIT_ALIASES[n] || n] = rows[i]; });
   return DRUM_TRACKS.map(t => byName[t.name] !== undefined ? byName[t.name] : fill());
 }
@@ -1267,80 +1275,102 @@ function noiseBuffers(ctx){
   return list;
 }
 
-// One drum hit. Every time is relative to `when` (the scheduled future time) —
-// never ctx.currentTime, or the hit fires up to SCHED_AHEAD early (DESIGN.md M4).
-function synthDrum(ctx, type, freq, vol, dest, when){
-  if(vol<=0) return;
-  function mkNoise(){   // hits are at most 1.6 s long, the buffers NOISE_SEC
-    const src=ctx.createBufferSource(), list=noiseBuffers(ctx);
-    src.buffer=list[Math.floor(Math.random()*list.length)]; return src;
+// ── Drum sounds (2026-11-27: closer to a real kit, kept light) ──
+// Built from a few oscillators and the shared noise — no samples:
+//   kick   sine with a fast pitch drop + a soft, band-limited beater click
+//   snare  two drum-head tones + band-passed noise for the wires
+//   clap   one band-passed noise burst with three quick re-attacks + a tail
+//   hats   six inharmonic square waves (the classic "metal" bank), band/high-
+//          passed; a closed hat chokes a ringing open hat, like a real pedal
+//   toms   pitched sine falling to its pitch + a short stick transient
+//   crash  the metal bank an octave up + bright noise, long decay
+// Levels (DRUM_LEVEL) set the default balance: hats and cymbal sit well under
+// kick and snare so long loops don't tire the ear. Everything then goes
+// through drumBus(): a gentle high-shelf cut, a low-pass and a soft compressor.
+// Every time is relative to `when` (the scheduled future time) — never
+// ctx.currentTime, or the hit fires up to SCHED_AHEAD early (DESIGN.md M4).
+const DRUM_LEVEL = { kick:1.0, snare:0.62, clap:1.5, hihat:1.8, openhat:1.15, tom:0.8, crash:0.22 };   // measured peaks vs the kick: snare −3, clap −7, toms −2, hats −14, crash −13 dB
+const METAL_FREQS = [205.3, 304.4, 369.6, 522.7, 540, 800];   // inharmonic square waves (cymbal-like)
+const _bus = new WeakMap(), _openHat = new WeakMap();
+// The drum bus of a context (made once): high-shelf −5 dB above 6 kHz →
+// low-pass 12 kHz → a soft compressor → speakers
+function drumBus(ctx){
+  let bus = _bus.get(ctx);
+  if(!bus){
+    const shelf = ctx.createBiquadFilter(), lp = ctx.createBiquadFilter(), comp = ctx.createDynamicsCompressor();
+    shelf.type = 'highshelf'; shelf.frequency.value = 6000; shelf.gain.value = -5;
+    lp.type = 'lowpass'; lp.frequency.value = 12000; lp.Q.value = 0.5;
+    comp.threshold.value = -16; comp.knee.value = 10; comp.ratio.value = 3; comp.attack.value = 0.004; comp.release.value = 0.15;
+    shelf.connect(lp); lp.connect(comp); comp.connect(ctx.destination);
+    bus = shelf; _bus.set(ctx, bus);
   }
-  function env(g,v,d){ g.gain.setValueAtTime(v,when); g.gain.exponentialRampToValueAtTime(0.001,when+d); }
+  return bus;
+}
+function synthDrum(ctx, type, freq, vol, dest, when){
+  vol *= DRUM_LEVEL[type] ?? 1;
+  if(vol<=0) return;
+  const end = [];                           // [node, stopAt] — started and stopped together below
+  const gainEnv = (peak, d, attack = 0.001) => {
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, when);
+    g.gain.linearRampToValueAtTime(peak, when + attack);
+    g.gain.exponentialRampToValueAtTime(0.0001, when + d);
+    return g;
+  };
+  const filter = (kind, f, q = 0.7) => { const b = ctx.createBiquadFilter(); b.type = kind; b.frequency.value = f; b.Q.value = q; return b; };
+  const out = ctx.createGain(); out.connect(dest);   // the whole hit (what a stop fades out)
+  const chain = (...nodes) => { for(let k = 0; k < nodes.length - 1; k++) nodes[k].connect(nodes[k + 1]); nodes.at(-1).connect(out); };
+  const noise = d => { const src = ctx.createBufferSource(), list = noiseBuffers(ctx);   // d ≤ NOISE_SEC
+    src.buffer = list[Math.floor(Math.random() * list.length)]; end.push([src, d]); return src; };
+  const osc = (wave, f, d) => { const o = ctx.createOscillator(); o.type = wave; o.frequency.value = f; end.push([o, d]); return o; };
+  // the metal bank: six square waves summed, scaled by `ratio`
+  const metal = (ratio, d) => { const sum = ctx.createGain(); sum.gain.value = 1 / METAL_FREQS.length;
+    METAL_FREQS.forEach(f => osc('square', f * ratio, d).connect(sum)); return sum; };
 
   if(type==='kick'){
-    // low and tight (2026-11-22): a fast pitch drop 150 Hz → `freq` (45 Hz) in
-    // 60 ms, a short body (0.32 s), and a 5 ms click for the beater
-    const d=0.32, o=ctx.createOscillator(), g=ctx.createGain();
-    env(g,vol,d); o.frequency.setValueAtTime(150,when);
-    o.frequency.exponentialRampToValueAtTime(freq,when+0.06);
-    o.connect(g); g.connect(dest); o.start(when); o.stop(when+d);
-    trackNode(o,g,when+d);
-    const c=mkNoise(0.006), cf=ctx.createBiquadFilter(), cg=ctx.createGain();
-    cf.type='highpass'; cf.frequency.value=1800; env(cg,vol*0.3,0.006);
-    c.connect(cf); cf.connect(cg); cg.connect(dest); c.start(when); c.stop(when+0.006);
-    trackNode(c,cg,when+0.006);
+    const d = 0.38, o = osc('sine', 160, d), g = gainEnv(vol, d, 0.002);
+    o.frequency.setValueAtTime(160, when); o.frequency.exponentialRampToValueAtTime(freq, when + 0.07);
+    chain(o, g);
+    const cg = gainEnv(vol * 0.16, 0.012); chain(noise(0.012), filter('bandpass', 3200, 0.8), cg);
   } else if(type==='snare'){
-    const d=0.22;
-    const o2=ctx.createOscillator(), og=ctx.createGain();
-    env(og,vol*0.5,d*0.6); o2.frequency.value=200;
-    o2.connect(og); og.connect(dest); o2.start(when); o2.stop(when+d*0.6);
-    trackNode(o2,og,when+d*0.6);
-    const n=mkNoise(d), ng=ctx.createGain(); env(ng,vol*0.85,d);
-    n.connect(ng); ng.connect(dest); n.start(when); n.stop(when+d);
-    trackNode(n,ng,when+d);
-  } else if(type==='hihat'){
-    const d=0.05, n=mkNoise(d);
-    const f=ctx.createBiquadFilter(); f.type='highpass'; f.frequency.value=8500;
-    const g=ctx.createGain(); env(g,vol,d);
-    n.connect(f); f.connect(g); g.connect(dest); n.start(when); n.stop(when+d);
-    trackNode(n,g,when+d);
-  } else if(type==='openhat'){
-    const d=0.4, n=mkNoise(d);
-    const f=ctx.createBiquadFilter(); f.type='highpass'; f.frequency.value=6000;
-    const g=ctx.createGain(); env(g,vol,d);
-    n.connect(f); f.connect(g); g.connect(dest); n.start(when); n.stop(when+d);
-    trackNode(n,g,when+d);
-  } else if(type==='clap'){
-    const d=0.15;
-    [0,0.011,0.022].forEach(off=>{
-      const n=mkNoise(d), g=ctx.createGain();
-      g.gain.setValueAtTime(vol*0.65,when+off);
-      g.gain.exponentialRampToValueAtTime(0.001,when+off+d);
-      n.connect(g); g.connect(dest); n.start(when+off); n.stop(when+off+d);
-      trackNode(n,g,when+off+d);
+    const d = 0.2;
+    [[freq, 0.32], [freq * 1.78, 0.18]].forEach(([f, lv]) => {        // two head modes, dropping slightly
+      const o = osc('sine', f * 1.15, 0.12), g = gainEnv(vol * lv, 0.12);
+      o.frequency.setValueAtTime(f * 1.15, when); o.frequency.exponentialRampToValueAtTime(f, when + 0.03);
+      chain(o, g);
     });
+    chain(noise(d), filter('highpass', 1200), filter('lowpass', 8500), gainEnv(vol * 0.75, d));
+  } else if(type==='clap'){
+    const d = 0.22, g = ctx.createGain(), p = vol * 0.9;
+    g.gain.setValueAtTime(0.0001, when);
+    [0, 0.011, 0.022].forEach(t0 => {                                   // three hands, slightly apart
+      g.gain.setValueAtTime(p, when + t0); g.gain.exponentialRampToValueAtTime(p * 0.15, when + t0 + 0.009);
+    });
+    g.gain.setValueAtTime(p * 0.7, when + 0.031); g.gain.exponentialRampToValueAtTime(0.0001, when + d);
+    chain(noise(d), filter('bandpass', 1150, 0.9), g);
+  } else if(type==='hihat' || type==='openhat'){
+    const open = type==='openhat', d = open ? 0.42 : 0.05;
+    const g = gainEnv(vol, d);
+    chain(metal(1, d), filter('bandpass', 9500, 0.9), filter('highpass', 7000), g);
+    const prev = _openHat.get(ctx);
+    if(prev && prev.end > when && prev.start < when){                   // a new hat chokes a ringing open hat
+      const v = prev.peak * Math.pow(0.0001 / prev.peak, (when - prev.start) / (prev.end - prev.start));
+      prev.g.gain.cancelScheduledValues(when);
+      prev.g.gain.setValueAtTime(Math.max(v, 0.0001), when);
+      prev.g.gain.exponentialRampToValueAtTime(0.0001, when + 0.02);
+    }
+    if(open) _openHat.set(ctx, { g, start: when, end: when + d, peak: vol });
   } else if(type==='tom'){
-    // a pitched membrane: sine falling from 1.6× to the pitch, plus a little noise for the stick
-    const d=0.42, o=ctx.createOscillator(), g=ctx.createGain();
-    env(g,vol*0.9,d); o.frequency.setValueAtTime(freq*1.6,when);
-    o.frequency.exponentialRampToValueAtTime(freq,when+0.12);
-    o.connect(g); g.connect(dest); o.start(when); o.stop(when+d);
-    trackNode(o,g,when+d);
-    const n=mkNoise(0.05), ng=ctx.createGain(); env(ng,vol*0.18,0.05);
-    n.connect(ng); ng.connect(dest); n.start(when); n.stop(when+0.05);
-    trackNode(n,ng,when+0.05);
+    const d = 0.3 + 30 / freq, o = osc('sine', freq * 1.5, d), g = gainEnv(vol * 0.9, d, 0.002);  // lower toms ring longer
+    o.frequency.setValueAtTime(freq * 1.5, when); o.frequency.exponentialRampToValueAtTime(freq, when + 0.12);
+    chain(o, g);
+    const ng = gainEnv(vol * 0.12, 0.03); chain(noise(0.03), filter('bandpass', 2500, 0.8), ng);
   } else if(type==='crash'){
-    // a long bright wash: high-passed noise with a slow decay, and a short brighter splash at the hit
-    const d=1.6, n=mkNoise(d);
-    const f=ctx.createBiquadFilter(); f.type='highpass'; f.frequency.value=freq*0.8;
-    const g=ctx.createGain(); env(g,vol*0.55,d);
-    n.connect(f); f.connect(g); g.connect(dest); n.start(when); n.stop(when+d);
-    trackNode(n,g,when+d);
-    const s=mkNoise(0.15), sf=ctx.createBiquadFilter(), sg=ctx.createGain();
-    sf.type='highpass'; sf.frequency.value=freq*1.6; env(sg,vol*0.35,0.15);
-    s.connect(sf); sf.connect(sg); sg.connect(dest); s.start(when); s.stop(when+0.15);
-    trackNode(s,sg,when+0.15);
-  }
+    const d = 1.8, g = gainEnv(vol, d, 0.003), ng = gainEnv(vol * 0.6, 1.2, 0.003);
+    chain(metal(2.1, d), filter('highpass', 5000), filter('lowpass', 11000), g);
+    chain(noise(1.2), filter('highpass', 6000), ng);
+  } else return;
+  for(const [node, d] of end){ node.start(when); node.stop(when + d); trackNode(node, out, when + d); }
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1389,9 +1419,9 @@ let S = {
 (function initDrumPreset(){
   S.rhythmBlocks.forEach(b=>{
     const p = b.pattern;
-    [0,4,8,12].forEach(i=>p[0][i]=3);      // kick
-    [4,12].forEach(i=>p[1][i]=3);          // snare
-    for(let i=0;i<16;i+=2) p[2][i]=2;      // hihat
+    [0,4,8,12].forEach(i=>p[drumIdx('KICK')][i]=3);
+    [4,12].forEach(i=>p[drumIdx('SNARE')][i]=3);
+    for(let i=0;i<16;i+=2) p[drumIdx('HAT CLOSED')][i]=2;
   });
 })();
 
@@ -1928,7 +1958,7 @@ const Transport = {
           if(rhythmOn) block.pattern.forEach((row, ti)=>{
             const vel = row[s], prm = S.drumParams[ti];
             if(vel>0 && !prm.mute && !(soloActive && !prm.solo) && !block.muted?.[ti])
-              synthDrum(ctx, DRUM_TRACKS[ti].type, DRUM_TRACKS[ti].freq, DRUM_VEL_GAIN[vel]*(prm.vol/100)*rhythmGain, ctx.destination, when);
+              synthDrum(ctx, DRUM_TRACKS[ti].type, DRUM_TRACKS[ti].freq, DRUM_VEL_GAIN[vel]*(prm.vol/100)*rhythmGain, drumBus(ctx), when);
           });
           drumEvents.push({tick:n, time:when, blockIdx:rr.outerIdx, step: rr.outerIdx===rr.idx ? s : -1});
           this.lastDrumKey = rr.outerIdx + ':' + s;
@@ -2716,21 +2746,22 @@ function alignMixerToSteps(){
 // velocity (3 accent / 2 normal / 1 ghost), '.' is a rest. `beats` = how many
 // beats the strings span; the pattern is tiled over the block's length.
 const BEAT_PRESETS = [
-  { name:'8ビート', beats:4, rows:{ KICK:'3.......3.2.....', SNARE:'....3.......3...', 'HI-HAT':'2.2.2.2.2.2.2.2.' } },
-  { name:'16ビート', beats:4, rows:{ KICK:'3.....2...3.....', SNARE:'....3.......3..1', 'HI-HAT':'2121212121212121' } },
-  { name:'4つ打ち', beats:4, rows:{ KICK:'3...3...3...3...', CLAP:'....3.......3...', 'HI-HAT':'1...1...1...1...', 'OPEN HH':'..2...2...2...2.' } },
-  { name:'ハーフタイム', beats:4, rows:{ KICK:'3.........2.....', SNARE:'........3.......', 'HI-HAT':'2.2.2.2.2.2.2.2.' } },
-  { name:'シャッフル', beats:4, rows:{ KICK:'3.....3.....', SNARE:'...3.....3..', 'HI-HAT':'2.12.12.12.1' } },
-  { name:'ボサノバ', beats:8, rows:{ KICK:'3..23..23..23..23..23..23..23..2', SNARE:'2..2..2...2..2....2..2..2..2....', 'HI-HAT':'2121212121212121'.repeat(2) } },
-  { name:'ワンドロップ', beats:4, rows:{ KICK:'........3.......', SNARE:'........3.......', 'HI-HAT':'..2...2...2...2.' } },
-  { name:'タム回し', beats:4, rows:{ SNARE:'3.2.............', 'HI TOM':'....3.2.........', 'LOW TOM':'........3.2.....', FLOOR:'............3.2.' } },
+  { name:'8ビート', beats:4, rows:{ KICK:'3.......3.2.....', SNARE:'....3.......3...', 'HAT CLOSED':'2.2.2.2.2.2.2.2.' } },
+  { name:'16ビート', beats:4, rows:{ KICK:'3.....2...3.....', SNARE:'....3.......3..1', 'HAT CLOSED':'2121212121212121' } },
+  { name:'4つ打ち', beats:4, rows:{ KICK:'3...3...3...3...', CLAP:'....3.......3...', 'HAT CLOSED':'1...1...1...1...', 'HAT OPEN':'..2...2...2...2.' } },
+  { name:'ハーフタイム', beats:4, rows:{ KICK:'3.........2.....', SNARE:'........3.......', 'HAT CLOSED':'2.2.2.2.2.2.2.2.' } },
+  { name:'シャッフル', beats:4, rows:{ KICK:'3.....3.....', SNARE:'...3.....3..', 'HAT CLOSED':'2.12.12.12.1' } },
+  { name:'ボサノバ', beats:8, rows:{ KICK:'3..23..23..23..23..23..23..23..2', SNARE:'2..2..2...2..2....2..2..2..2....', 'HAT CLOSED':'2121212121212121'.repeat(2) } },
+  { name:'ワンドロップ', beats:4, rows:{ KICK:'........3.......', SNARE:'........3.......', 'HAT CLOSED':'..2...2...2...2.' } },
+  { name:'タム回し', beats:4, rows:{ SNARE:'3.2.............', 'TOM HIGH':'....3.2.........', 'TOM LOW':'........3.2.....', 'TOM FLOOR':'............3.2.' } },
 ];
 function presetLength(pr){ return Math.max(...Object.values(pr.rows).map(r=>r.length)); }
 // The preset as a pattern for `beats` beats: nSteps = beats × the preset's steps per beat.
 function presetPattern(pr, beats){
   const L = presetLength(pr), spb = L / pr.beats, n = Math.max(1, Math.round(beats * spb));
+  const rows = {}; Object.entries(pr.rows).forEach(([k, v])=>{ rows[KIT_ALIASES[k] || k] = v; });   // older names (saved presets)
   const pattern = DRUM_TRACKS.map(t=>{
-    const r = pr.rows[t.name];
+    const r = rows[t.name];
     return Array.from({length:n}, (_,i)=>{ const ch = r ? r[i % L] : '.'; return ch==='.' ? 0 : +ch; });
   });
   return { nSteps:n, pattern };
@@ -4284,7 +4315,7 @@ function startTitleEdit(){
 //  settings and are not applied.
 // ═══════════════════════════════════════════════════════
 const MIDI_PPQ = 480;
-const GM_DRUMS = { 'KICK':36, 'SNARE':38, 'HI-HAT':42, 'OPEN HH':46, 'CLAP':39, 'HI TOM':50, 'LOW TOM':45, 'FLOOR':41, 'CRASH':49 };
+const GM_DRUMS = { 'KICK':36, 'SNARE':38, 'HAT CLOSED':42, 'HAT OPEN':46, 'CLAP':39, 'TOM HIGH':50, 'TOM LOW':45, 'TOM FLOOR':41, 'CRASH':49 };
 const MIDI_VEL = { 1:50, 2:90, 3:120 };
 // Every note and marker of one pass, in MIDI ticks:
 // { song:[{t, text}], bass:[{t, len, note, vel}], chords:[…], drums:[…] }
