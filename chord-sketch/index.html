@@ -1229,11 +1229,23 @@ function mkRhythmBlock(startBeat, beats, nSteps){
 const activeNodes = new Set(); // {osc, gain, stopAt} of everything sounding or scheduled
 
 let trackSink = null;   // while set, the nodes being created are also collected here (see playPreviewNow)
+// Once every source playing through `gain` has ended, `gain` is disconnected
+// (2026-11-27). Safari does not reliably free finished nodes that are still
+// connected, and keeps processing their filters: over a few minutes of playback
+// the audio thread slowed down until playback stalled, even after stopping.
+const _gainUsers = new WeakMap();   // gain → sources still playing through it
 function trackNode(osc, gain, stopAt){
   const entry = { osc, gain, stopAt };
   activeNodes.add(entry);
   if(trackSink) trackSink.push(entry);
-  if(osc.addEventListener) osc.addEventListener('ended', ()=>activeNodes.delete(entry), { once:true });
+  _gainUsers.set(gain, (_gainUsers.get(gain) || 0) + 1);
+  if(osc.addEventListener) osc.addEventListener('ended', ()=>{
+    activeNodes.delete(entry);
+    try{ osc.disconnect(); }catch(_){}
+    const left = _gainUsers.get(gain) - 1;
+    _gainUsers.set(gain, left);
+    if(left <= 0) try{ gain.disconnect(); }catch(_){}
+  }, { once:true });
 }
 
 function killAllActiveNodes(ctx){
@@ -1289,7 +1301,7 @@ function noiseBuffers(ctx){
 // through drumBus(): a gentle high-shelf cut, a low-pass and a soft compressor.
 // Every time is relative to `when` (the scheduled future time) — never
 // ctx.currentTime, or the hit fires up to SCHED_AHEAD early (DESIGN.md M4).
-const DRUM_LEVEL = { kick:1.0, snare:0.62, clap:1.5, hihat:1.8, openhat:1.15, tom:0.8, crash:0.22 };   // measured peaks vs the kick: snare −3, clap −7, toms −2, hats −14, crash −13 dB
+const DRUM_LEVEL = { kick:1.0, snare:0.62, clap:1.5, hihat:0.37, openhat:0.27, tom:0.8, crash:0.22 };   // measured peaks vs the kick: snare −2, clap −7, toms −2, hats −13/−15, crash −13 dB
 const METAL_FREQS = [205.3, 304.4, 369.6, 522.7, 540, 800];   // inharmonic square waves (cymbal-like)
 const _bus = new WeakMap(), _openHat = new WeakMap();
 // The drum bus of a context (made once): high-shelf −5 dB above 6 kHz →
@@ -1349,12 +1361,21 @@ function synthDrum(ctx, type, freq, vol, dest, when){
     g.gain.setValueAtTime(p * 0.7, when + 0.031); g.gain.exponentialRampToValueAtTime(0.0001, when + d);
     chain(noise(d), filter('bandpass', 1150, 0.9), g);
   } else if(type==='hihat' || type==='openhat'){
-    const open = type==='openhat', d = open ? 0.42 : 0.05;
-    const g = gainEnv(vol, d);
-    chain(metal(1, d), filter('bandpass', 9500, 0.9), filter('highpass', 7000), g);
+    // the metal bank for the shimmer + high noise for the hiss; the open hat
+    // drops fast then rings (two stages), the closed one is a short tick
+    const open = type==='openhat', d = open ? 0.5 : 0.06, knee = 0.05;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, when);
+    g.gain.linearRampToValueAtTime(vol, when + 0.001);
+    if(open) g.gain.exponentialRampToValueAtTime(vol * 0.4, when + knee);
+    g.gain.exponentialRampToValueAtTime(0.0001, when + d);
+    const gm = ctx.createGain(), gn = ctx.createGain(); gm.gain.value = 0.55; gn.gain.value = 0.45;
+    chain(metal(1, d), filter('bandpass', 9000, 0.8), gm, g);
+    chain(noise(d), filter('highpass', 7500), gn, g);
     const prev = _openHat.get(ctx);
     if(prev && prev.end > when && prev.start < when){                   // a new hat chokes a ringing open hat
-      const v = prev.peak * Math.pow(0.0001 / prev.peak, (when - prev.start) / (prev.end - prev.start));
+      const t = when - prev.start, p = prev.peak, d0 = prev.end - prev.start;
+      const v = t < knee ? p * Math.pow(0.4, t / knee) : p * 0.4 * Math.pow(0.0001 / (p * 0.4), (t - knee) / (d0 - knee));
       prev.g.gain.cancelScheduledValues(when);
       prev.g.gain.setValueAtTime(Math.max(v, 0.0001), when);
       prev.g.gain.exponentialRampToValueAtTime(0.0001, when + 0.02);
