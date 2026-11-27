@@ -1565,12 +1565,24 @@ function selectionSpan(){
 }
 
 // ── Inserting / moving with "shift what follows" (DESIGN.md M15) ──
-// Insert `newItems` (positions relative to `at`) into `track` at beat `at`;
-// every item starting at or after `at` moves later by the inserted span.
+// Pushes the blocks of `others` that start at or after `from` later, each only
+// as far as needed so nothing starts before `until` or overlaps the one before
+// (a gap that is wide enough absorbs the push). Shared by insert and move.
+function pushOut(others, from, until){
+  let cursor = until;
+  others.filter(r => r.startBeat >= from - EPS).sort((a,b)=>a.startBeat-b.startBeat).forEach(r=>{
+    if(r.startBeat < cursor - EPS) r.startBeat = snapTick(cursor);
+    cursor = Math.max(cursor, itemEnd(r));
+  });
+}
+// Insert `newItems` (positions relative to `at`) into `track` at beat `at`.
+// They fill the empty space there; what follows moves only if it would overlap
+// (2026-11-27 — before, everything after `at` moved by the inserted length even
+// when the gap was wide enough).
 function insertItems(track, newItems, at){
   const items = trackItems(track);
-  const span = Math.max(...newItems.map(it=>itemEnd(it))) ;
-  items.forEach(it=>{ if(it.startBeat >= at - EPS) it.startBeat = snapTick(it.startBeat + span); });
+  const span = Math.max(...newItems.map(it=>itemEnd(it)));
+  pushOut(items, at, snapTick(at + span));
   newItems.forEach(it=>{ it.startBeat = snapTick(it.startBeat + at); items.push(it); });
   sortTrack(track); fitTimeline();
 }
@@ -1592,12 +1604,7 @@ function moveItems(track, ids, delta){
   const start = landingStart(rest, Math.max(0, snapTick(g0 + delta)));
   const shift = start - g0;
   moving.forEach(m=>{ m.startBeat = snapTick(m.startBeat + shift); });
-  const gEnd = Math.max(...moving.map(itemEnd));
-  let cursor = gEnd;
-  rest.filter(r => r.startBeat >= start - EPS).sort((a,b)=>a.startBeat-b.startBeat).forEach(r=>{
-    if(r.startBeat < cursor - EPS) r.startBeat = snapTick(cursor);
-    cursor = Math.max(cursor, itemEnd(r));
-  });
+  pushOut(rest, start, Math.max(...moving.map(itemEnd)));
   sortTrack(track); fitTimeline();
 }
 
